@@ -110,6 +110,8 @@ let copies: [String: Copy] = [
 let pronunciation: [String: [(String, String)]] = [
     "ru": [("RenameConvert", "Ринейм Конверт"), ("macOS", "мак О Эс"), ("Finder", "Файндер"), ("FFmpeg", "эф эф эм пэг"),
            ("HEIC", "хейк"), ("JPG", "джейпег"), ("MKV", "эм ка вэ"), ("WebP", "веб пэ"), ("OGG", "огг")],
+    "en": [("RenameConvert", "Rename Convert"), ("FFmpeg", "F F M peg"), ("HEIC", "heek"), ("JPG", "J-peg"),
+           ("MKV", "M K V"), ("WebP", "web P"), ("OGG", "ogg")],
 ]
 
 func spoken(_ text: String, lang: String) -> String {
@@ -752,9 +754,13 @@ struct ScreenScene: View {
     }
 
     var browserSearch: some View {
-        let chars = min(copy.search.count, max(0, Int((t - 0.2) / 0.06)))
+        // Печать и подсказки укладываются в сцену: в короткой сцене буквы идут быстрее.
+        let perChar = min(0.06, max(0.02, d * 0.45) / Double(copy.search.count))
+        let chars = min(copy.search.count, max(0, Int((t - 0.15) / perChar)))
         let query = String(copy.search.prefix(chars))
-        let shown = min(copy.suggestions.count, max(0, Int((t - 0.6) / 0.15)))
+        let typedBy = 0.15 + perChar * Double(copy.search.count)
+        let perSuggestion = min(0.15, max(0.05, d - typedBy - 0.4) / Double(copy.suggestions.count))
+        let shown = min(copy.suggestions.count, max(0, Int((t - typedBy * 0.6) / perSuggestion)))
         return browserChrome {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 10) {

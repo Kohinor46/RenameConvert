@@ -17,6 +17,16 @@
 该应用未经公证，因此 macOS 会阻止首次启动：右键点按应用 → **打开**
 （或在“系统设置”→“隐私与安全性”中点按 **仍要打开**）。
 
+## 支持项目
+
+RenameConvert 是免费的。如果它为你节省了时间，你可以支持开发：
+
+- **银行卡（俄罗斯银行）：** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT，仅限 TON 网络：** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ 仅发送 TON 网络上的 USDT——其他币种或网络可能会丢失。
+
+应用内也提供相同的方式及二维码：菜单 →“支持项目 ♥…”。
+
 ## 功能
 
 | 类别 | 源格式 | 目标格式 |

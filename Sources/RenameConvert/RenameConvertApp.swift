@@ -106,6 +106,9 @@ struct MenuContent: View {
             Task { await model.updater.check(userInitiated: true) }
         }
         Button("Сообщить об ошибке…") { model.openReport() }
+        if Donation.isConfigured {
+            Button("Поддержать проект ♥…") { showSettings(.donate) }
+        }
         Button("Выйти из RenameConvert") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }

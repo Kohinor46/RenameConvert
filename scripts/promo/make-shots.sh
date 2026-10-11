@@ -24,6 +24,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
 <key>CFBundleShortVersionString</key><string>$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)</string>
 <key>CFBundleDevelopmentRegion</key><string>en</string>
 <key>RCUpdateRepository</key><string>Kohinor46/RenameConvert</string>
+<key>RCDonateCloudTips</key><string>$(/usr/libexec/PlistBuddy -c "Print RCDonateCloudTips" Resources/Info.plist)</string>
+<key>RCDonateUSDTTON</key><string>$(/usr/libexec/PlistBuddy -c "Print RCDonateUSDTTON" Resources/Info.plist)</string>
 </dict></plist>
 EOF
 codesign --force --sign - "$APP" 2>/dev/null
@@ -40,7 +42,7 @@ for L in "$@"; do
   rm -f "$FILES/holiday.mp4"
   HOME="$WORK/home" CFFIXED_USER_HOME="$WORK/home" "$APP/Contents/MacOS/shots" "$FILES" "$OUT/$L" -AppleLanguages "($L)" 2>&1 | grep -v attributedString || true
   # Для ролика — без боковой панели: при съёмке вне экрана выделенный пункт выходит чёрным.
-  for f in "$OUT/$L"/{general,rules,params,history,formats,about}.png; do
+  for f in "$OUT/$L"/{general,rules,params,history,formats,about,donate}.png; do
     [[ -f "$f" ]] || continue
     W=$(sips -g pixelWidth "$f" | awk '/pixelWidth/ {print $2}')
     H=$(sips -g pixelHeight "$f" | awk '/pixelHeight/ {print $2}')

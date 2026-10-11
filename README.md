@@ -17,6 +17,16 @@ and drag the app to Applications. Requires macOS 15 or later, Apple Silicon or I
 The app is not notarized, so macOS blocks the first launch: right-click the app → **Open**
 (or **Open Anyway** in System Settings → Privacy & Security).
 
+## Support the project
+
+RenameConvert is free. If it saves you time, you can support development:
+
+- **Bank card (Russian banks):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, TON network only:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Send only USDT on the TON network — other coins or networks may be lost.
+
+The same options, with a QR code, are in the app: menu → "Support the Project ♥…".
+
 ## Features
 
 | Category | From | To |

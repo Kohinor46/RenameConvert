@@ -17,6 +17,16 @@ rồi kéo ứng dụng vào thư mục Ứng dụng. Yêu cầu macOS 15 trở 
 Ứng dụng chưa được công chứng (notarize), vì vậy macOS sẽ chặn lần khởi chạy đầu tiên: bấm chuột phải vào ứng dụng → **Mở**
 (hoặc **Vẫn mở** trong Cài đặt hệ thống → Quyền riêng tư & Bảo mật).
 
+## Ủng hộ dự án
+
+RenameConvert miễn phí. Nếu ứng dụng giúp bạn tiết kiệm thời gian, bạn có thể ủng hộ việc phát triển:
+
+- **Thẻ ngân hàng (ngân hàng Nga):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, chỉ mạng TON:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Chỉ gửi USDT trên mạng TON — coin hoặc mạng khác có thể bị mất.
+
+Các tùy chọn tương tự, kèm mã QR, có trong ứng dụng: menu → "Ủng hộ dự án ♥…".
+
 ## Tính năng
 
 | Danh mục | Từ | Sang |

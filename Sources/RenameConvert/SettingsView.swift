@@ -5,7 +5,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsTab: Hashable, CaseIterable {
-    case general, rules, params, folders, formats, history, about
+    case general, rules, params, folders, formats, history, about, donate
 
     var title: LocalizedStringKey {
         switch self {
@@ -16,6 +16,7 @@ enum SettingsTab: Hashable, CaseIterable {
         case .formats: return "Форматы"
         case .history: return "История"
         case .about: return "О программе"
+        case .donate: return "Поддержать"
         }
     }
 
@@ -28,6 +29,7 @@ enum SettingsTab: Hashable, CaseIterable {
         case .formats: return "square.grid.2x2"
         case .history: return "clock.arrow.circlepath"
         case .about: return "info.circle"
+        case .donate: return "heart"
         }
     }
 }
@@ -71,6 +73,7 @@ struct SettingsView: View {
         case .formats: FormatsTab()
         case .history: HistoryTab(model: model)
         case .about: AboutTab(model: model)
+        case .donate: DonateTab()
         }
     }
 }

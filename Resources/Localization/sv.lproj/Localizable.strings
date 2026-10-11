@@ -159,3 +159,16 @@
 "Как в системе" = "Systemets standard";
 "Язык изменится после перезапуска." = "Språket ändras när appen startas om.";
 "Перезапустить" = "Starta om";
+"RenameConvert сделал для вас %lld конвертаций" = "RenameConvert har gjort %lld konverteringar åt dig";
+"Если он полезен — поддержите разработку ♥" = "Om den är till nytta — stöd utvecklingen ♥";
+"RenameConvert бесплатный. Если он экономит вам время — поддержите разработку." = "RenameConvert är gratis. Om den sparar tid åt dig kan du stödja utvecklingen.";
+"Банковской картой" = "Med bankkort";
+"Перевести через CloudTips" = "Donera via CloudTips";
+"Карты российских банков" = "Kort från ryska banker";
+"Криптовалютой" = "Med kryptovaluta";
+"USDT · сеть TON" = "USDT · TON-nätverket";
+"Скопировано" = "Kopierad";
+"Скопировать адрес" = "Kopiera adress";
+"Отправляйте только USDT в сети TON — иначе средства могут потеряться." = "Skicka bara USDT i TON-nätverket — annars kan pengarna gå förlorade.";
+"Поддержать проект ♥…" = "Stöd projektet ♥…";
+"Поддержать" = "Stöd";

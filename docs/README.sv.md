@@ -17,6 +17,16 @@ och dra appen till mappen Program. Kräver macOS 15 eller senare, Apple Silicon 
 Appen är inte notariserad, så macOS blockerar första starten: högerklicka på appen → **Öppna**
 (eller **Öppna ändå** i Systeminställningar → Integritet och säkerhet).
 
+## Stöd projektet
+
+RenameConvert är gratis. Om den sparar tid åt dig kan du stödja utvecklingen:
+
+- **Bankkort (ryska banker):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, endast TON-nätverket:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Skicka bara USDT i TON-nätverket — andra mynt eller nätverk kan gå förlorade.
+
+Samma alternativ, med QR-kod, finns i appen: menyn → ”Stöd projektet ♥…”.
+
 ## Funktioner
 
 | Kategori | Från | Till |

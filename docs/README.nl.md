@@ -17,6 +17,16 @@ en sleep de app naar de map Apps. Vereist macOS 15 of nieuwer, Apple Silicon of 
 De app is niet genotariseerd, dus macOS blokkeert de eerste keer openen: klik met de rechtermuisknop op de app → **Open**
 (of **Open toch** in Systeeminstellingen → Privacy en beveiliging).
 
+## Steun het project
+
+RenameConvert is gratis. Bespaart het je tijd, dan kun je de ontwikkeling steunen:
+
+- **Bankpas (Russische banken):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, alleen TON-netwerk:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Stuur alleen USDT via het TON-netwerk — andere munten of netwerken kunnen verloren gaan.
+
+Dezelfde opties, met een QR-code, vind je in de app: menu → "Steun het project ♥…".
+
 ## Functies
 
 | Categorie | Van | Naar |

@@ -68,7 +68,8 @@ def to_key(parts):
     for kind, value in parts:
         if kind == "char":
             key.append("%%" if value == "%" else value)
-        elif value == "$0" or ".count" in value or value.startswith("Int("):
+        # Целые числа: $0 из ForEach по Int, …count / …Count, Int(…) → %lld; всё остальное → %@
+        elif value == "$0" or re.search(r"(^|\.)count\b|Count\b", value) or value.startswith("Int("):
             key.append("%lld")
         else:
             key.append("%@")

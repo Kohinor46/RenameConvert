@@ -17,6 +17,16 @@ a přetáhněte aplikaci do složky Aplikace. Vyžaduje macOS 15 nebo novější
 Aplikace není notarizovaná, proto macOS zablokuje první spuštění: klikněte na aplikaci pravým tlačítkem → **Otevřít**
 (nebo **Přesto otevřít** v Nastavení systému → Soukromí a zabezpečení).
 
+## Podpořte projekt
+
+RenameConvert je zdarma. Pokud vám šetří čas, můžete podpořit jeho vývoj:
+
+- **Platební karta (ruské banky):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, pouze síť TON:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Posílejte pouze USDT v síti TON — jiné mince nebo sítě se mohou ztratit.
+
+Stejné možnosti i s QR kódem najdete v aplikaci: menu → „Podpořit projekt ♥…“.
+
 ## Funkce
 
 | Kategorie | Z | Do |

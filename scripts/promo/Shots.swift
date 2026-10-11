@@ -52,7 +52,7 @@ struct Shots {
             }
 
             for (tab, name) in [(SettingsTab.general, "general"), (.history, "history"), (.params, "params"),
-                                (.rules, "rules"), (.formats, "formats"), (.about, "about")] {
+                                (.rules, "rules"), (.formats, "formats"), (.about, "about"), (.donate, "donate")] {
                 model.settingsTab = tab
                 let host = NSHostingView(rootView: SettingsView(model: model))
                 host.frame = NSRect(x: 0, y: 0, width: 880, height: 580)

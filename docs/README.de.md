@@ -17,6 +17,16 @@ und ziehe die App in den Ordner „Programme“. Voraussetzungen: macOS 15 oder 
 Die App ist nicht notarisiert, daher blockiert macOS den ersten Start: Rechtsklick auf die App → **Öffnen**
 (oder **Trotzdem öffnen** unter Systemeinstellungen → Datenschutz & Sicherheit).
 
+## Projekt unterstützen
+
+RenameConvert ist kostenlos. Wenn es dir Zeit spart, kannst du die Entwicklung unterstützen:
+
+- **Bankkarte (russische Banken):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, nur TON-Netzwerk:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Sende nur USDT im TON-Netzwerk – andere Coins oder Netzwerke können verloren gehen.
+
+Dieselben Optionen mit QR-Code findest du in der App: Menü → „Projekt unterstützen ♥ …“.
+
 ## Funktionen
 
 | Kategorie | Von | Nach |

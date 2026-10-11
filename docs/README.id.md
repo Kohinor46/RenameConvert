@@ -17,6 +17,16 @@ lalu seret aplikasi ke folder Aplikasi. Memerlukan macOS 15 atau lebih baru, App
 Aplikasi ini belum dinotarisasi, sehingga macOS memblokir peluncuran pertama: klik kanan aplikasi → **Buka**
 (atau **Tetap Buka** di Pengaturan Sistem → Privasi & Keamanan).
 
+## Dukung proyek ini
+
+RenameConvert gratis. Jika aplikasi ini menghemat waktu Anda, Anda dapat mendukung pengembangannya:
+
+- **Kartu bank (bank Rusia):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, hanya jaringan TON:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Kirim hanya USDT di jaringan TON — koin atau jaringan lain bisa hilang.
+
+Opsi yang sama, beserta kode QR, tersedia di aplikasi: menu → "Dukung Proyek ♥…".
+
 ## Fitur
 
 | Kategori | Dari | Ke |

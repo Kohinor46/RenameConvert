@@ -17,6 +17,16 @@ ve uygulamayı Uygulamalar klasörüne sürükleyin. macOS 15 veya sonrası, App
 Uygulama noter onaylı olmadığından macOS ilk açılışı engeller: uygulamaya sağ tıklayın → **Aç**
 (ya da Sistem Ayarları → Gizlilik ve Güvenlik bölümünde **Yine de Aç**).
 
+## Projeyi destekleyin
+
+RenameConvert ücretsizdir. Size zaman kazandırıyorsa geliştirmeyi destekleyebilirsiniz:
+
+- **Banka kartı (Rus bankaları):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, yalnızca TON ağı:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Yalnızca TON ağında USDT gönderin — diğer coin'ler veya ağlar kaybolabilir.
+
+Aynı seçenekler, QR koduyla birlikte, uygulamada da var: menü → "Projeyi Destekle ♥…".
+
 ## Özellikler
 
 | Kategori | Kaynak | Hedef |

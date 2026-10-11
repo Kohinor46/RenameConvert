@@ -82,6 +82,7 @@ final class AppModel {
         static let paused = "paused", keepOriginal = "keepOriginal", notify = "notify"
         static let defaultAction = "defaultAction", params = "params", rules = "rules"
         static let folders = "folders", excluded = "excludedFolders", history = "history", launched = "launchedBefore"
+        static let conversions = "conversionCount", donatePrompted = "donatePromptShown"
     }
 
     init() {
@@ -117,6 +118,7 @@ final class AppModel {
         notifications.setUp()
         notifications.onReport = { [weak self] text in self?.openReport(draft: text) }
         notifications.onUpdate = { [weak self] in self?.showUpdate() }
+        notifications.onDonate = { [weak self] in self?.openSettings?(.donate) }
         updater.onUpdateFound = { [weak self] release in
             self?.notifications.post(title: String(localized: "Доступна новая версия \(release.version)"),
                                      body: String(localized: "Нажмите, чтобы посмотреть и установить."), kind: .update)
@@ -278,6 +280,7 @@ final class AppModel {
             history.insert(entry, at: 0)
             saveHistory()
             lastError = nil
+            countConversionForDonationPrompt()
             if notify {
                 notifications.post(title: String(localized: "Сконвертировано"), body: "\(job.oldName) → \(job.newName)",
                                    kind: .converted(path: entry.convertedPath))
@@ -300,6 +303,19 @@ final class AppModel {
         let ns = error as NSError
         return (ns.domain == AVFoundationErrorDomain && ns.code == AVError.operationCancelled.rawValue)
             || (ns.domain == NSCocoaErrorDomain && ns.code == NSUserCancelledError)
+    }
+
+    // MARK: Поддержка проекта
+
+    /// Один раз — и только один — напоминает о поддержке после N успешных конвертаций.
+    private func countConversionForDonationPrompt() {
+        let count = defaults.integer(forKey: Keys.conversions) + 1
+        defaults.set(count, forKey: Keys.conversions)
+        guard Donation.isConfigured, count >= Donation.promptAfterConversions,
+              !defaults.bool(forKey: Keys.donatePrompted) else { return }
+        defaults.set(true, forKey: Keys.donatePrompted)
+        notifications.post(title: String(localized: "RenameConvert сделал для вас \(count) конвертаций"),
+                           body: String(localized: "Если он полезен — поддержите разработку ♥"), kind: .donate)
     }
 
     // MARK: Отчёт и обновления
@@ -387,10 +403,12 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         case converted(path: String)
         case error(report: String)
         case update
+        case donate
     }
 
     var onReport: ((String) -> Void)?
     var onUpdate: (() -> Void)?
+    var onDonate: (() -> Void)?
 
     func setUp() {
         // Вне .app-бандла (например, при запуске бинарника из .build) уведомления недоступны.
@@ -413,6 +431,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             content.userInfo = ["report": report]
             content.categoryIdentifier = "error"
         case .update: content.userInfo = ["update": true]
+        case .donate: content.userInfo = ["donate": true]
         }
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }
@@ -432,6 +451,8 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
                 onReport?(report)
             } else if info["update"] != nil {
                 onUpdate?()
+            } else if info["donate"] != nil {
+                onDonate?()
             }
         }
         completionHandler()

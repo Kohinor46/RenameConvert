@@ -17,6 +17,16 @@ y arrastra la app a Aplicaciones. Requiere macOS 15 o posterior, Apple Silicon o
 La app no está notarizada, por lo que macOS bloquea el primer arranque: haz clic derecho en la app → **Abrir**
 (o **Abrir igualmente** en Ajustes del Sistema → Privacidad y seguridad).
 
+## Apoyar el proyecto
+
+RenameConvert es gratuito. Si te ahorra tiempo, puedes apoyar su desarrollo:
+
+- **Tarjeta bancaria (bancos rusos):** [CloudTips](https://pay.cloudtips.ru/p/253eb33a)
+- **USDT, solo red TON:** `UQBSrz9r4NLiwa13oLu6pmEJVcxldyPba81lkBys5bnhgzJg`
+  ⚠️ Envía solo USDT en la red TON: otras monedas o redes podrían perderse.
+
+Las mismas opciones, con un código QR, están en la app: menú → «Apoyar el proyecto ♥…».
+
 ## Funciones
 
 | Categoría | De | A |

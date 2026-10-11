@@ -3,8 +3,9 @@
 import Foundation
 
 enum Log {
-    static let url: URL = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Logs/RenameConvert/RenameConvert.log")
+    /// Путь можно переопределить через RC_LOG — для тестов, чтобы не засорять настоящий журнал.
+    static let url: URL = ProcessInfo.processInfo.environment["RC_LOG"].map { URL(fileURLWithPath: $0) }
+        ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Logs/RenameConvert/RenameConvert.log")
 
     private static let queue = DispatchQueue(label: "RenameConvert.log")
     private static let maxSize = 2 * 1024 * 1024

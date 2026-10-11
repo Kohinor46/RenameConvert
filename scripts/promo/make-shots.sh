@@ -39,6 +39,14 @@ for L in "$@"; do
   cp "$FIX/clip.mov" "$FILES/holiday.mov"
   rm -f "$FILES/holiday.mp4"
   HOME="$WORK/home" CFFIXED_USER_HOME="$WORK/home" "$APP/Contents/MacOS/shots" "$FILES" "$OUT/$L" -AppleLanguages "($L)" 2>&1 | grep -v attributedString || true
+  # Для ролика — без боковой панели: при съёмке вне экрана выделенный пункт выходит чёрным.
+  for f in "$OUT/$L"/{general,rules,params,history,formats,about}.png; do
+    [[ -f "$f" ]] || continue
+    W=$(sips -g pixelWidth "$f" | awk '/pixelWidth/ {print $2}')
+    H=$(sips -g pixelHeight "$f" | awk '/pixelHeight/ {print $2}')
+    CUT=$((W * 211 / 880))
+    sips -c "$H" $((W - CUT)) --cropOffset 0 "$CUT" "$f" >/dev/null
+  done
   echo "$L: $(ls "$OUT/$L" | wc -l | tr -d ' ') снимков"
 done
 rm -rf "$WORK"

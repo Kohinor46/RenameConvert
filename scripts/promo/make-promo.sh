@@ -9,13 +9,18 @@ WORK=build/promo
 OUT=promo
 mkdir -p "$WORK" "$OUT"
 
-swiftc -O -parse-as-library -target "$(uname -m)-apple-macos15.0" scripts/promo/Promo.swift -o "$WORK/promo"
-scripts/promo/make-shots.sh "$WORK/shots" $LANGS
+# Пересобираем рендер и переснимаем окна, только если нужно.
+[[ "$WORK/promo" -nt scripts/promo/Promo.swift ]] || \
+  swiftc -O -parse-as-library -target "$(uname -m)-apple-macos15.0" scripts/promo/Promo.swift -o "$WORK/promo"
+for L in $LANGS; do [[ -f "$WORK/shots/$L/rules.png" ]] || scripts/promo/make-shots.sh "$WORK/shots" "$L"; done
 sips -s format png Resources/AppIcon.icns --out "$WORK/icon.png" >/dev/null
 
 for L in $LANGS; do
   # Голоса можно переопределить: VOICE_RU="Milena (Enhanced)" VOICE_EN="Ava (Premium)" (см. say -v "?")
   case $L in ru) VOICE=${VOICE_RU:-Milena}; RATE=180 ;; *) VOICE=${VOICE_EN:-Samantha}; RATE=175 ;; esac
+  # Имя файла с голосом: RenameConvert-promo-ru-milena-enhanced.mp4
+  SLUG=$(echo "$VOICE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\{1,\}/-/g; s/-$//')
+  NAME="RenameConvert-promo-$L-$SLUG"
   rm -rf "$WORK/$L-audio" && mkdir -p "$WORK/$L-audio"
   DURS=() FILTER="" INPUTS=() i=0
   while IFS= read -r line; do
@@ -37,6 +42,6 @@ for L in $LANGS; do
 
   "$WORK/promo" "$L" "$WORK/shots" "$WORK/$L-durations.json" "$WORK/$L-video.mp4" "$WORK/icon.png"
   "$FF" -hide_banner -loglevel error -y -i "$WORK/$L-video.mp4" -i "$WORK/$L-voice.m4a" \
-    -map 0:v -map 1:a -c:v copy -c:a copy -shortest -movflags +faststart "$OUT/RenameConvert-promo-$L.mp4"
-  echo "$OUT/RenameConvert-promo-$L.mp4 ($(du -h "$OUT/RenameConvert-promo-$L.mp4" | cut -f1))"
+    -map 0:v -map 1:a -c:v copy -c:a copy -shortest -movflags +faststart "$OUT/$NAME.mp4"
+  echo "$OUT/$NAME.mp4 ($(du -h "$OUT/$NAME.mp4" | cut -f1))"
 done

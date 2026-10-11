@@ -6,17 +6,20 @@
 
 phrases.json — список фраз (уже в «произносимом» виде). timings.json — [[начало, конец], …] в секундах.
 Озвучка одним куском даёт естественную речь без пауз-склеек; время фраз берётся из меток слов (WordBoundary).
-Если указан ffmpeg — паузы между предложениями (у синтезатора ~0.85 с) сжимаются до ~0.25 с: результат в out.wav,
+Если указан ffmpeg — паузы между предложениями (у синтезатора ~0.85 с) сжимаются до ~0.15 с: результат в out.wav,
 а timings.json пересчитывается под него.
 """
 import asyncio
 import json
+import os
 import subprocess
 import sys
 
 import edge_tts
 
-PAUSE_BEFORE, PAUSE_AFTER = 0.08, 0.17   # сколько тишины оставить до и после фразы
+# Сколько тишины оставить до и после фразы (сек); можно задать через окружение.
+PAUSE_BEFORE = float(os.environ.get("PAUSE_BEFORE", "0.05"))
+PAUSE_AFTER = float(os.environ.get("PAUSE_AFTER", "0.10"))
 
 
 def tighten(ffmpeg, src, dst, timings):
@@ -33,18 +36,9 @@ def tighten(ffmpeg, src, dst, timings):
     return new
 
 
-async def main(phrases_path, voice, rate, out_audio, out_timings, ffmpeg=None, out_wav=None):
-    phrases = json.load(open(phrases_path, encoding="utf-8"))
-    text = " ".join(phrases)
-    # Где в общем тексте начинается и кончается каждая фраза (в символах).
-    ranges, pos = [], 0
-    for p in phrases:
-        start = text.index(p, pos)
-        ranges.append((start, start + len(p)))
-        pos = start + len(p)
-
-    words = []  # (символ в тексте, начало сек, конец сек)
-    search = 0
+async def synthesize(text, voice, rate, out_audio):
+    """Синтез с метками слов: [(символ в тексте, начало сек, конец сек)]."""
+    words, search = [], 0
     communicate = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
     with open(out_audio, "wb") as audio:
         async for chunk in communicate.stream():
@@ -59,6 +53,28 @@ async def main(phrases_path, voice, rate, out_audio, out_timings, ffmpeg=None, o
                     search = at + len(word)
                 begin = chunk["offset"] / 1e7
                 words.append((at, begin, begin + chunk["duration"] / 1e7))
+    return words
+
+
+async def main(phrases_path, voice, rate, out_audio, out_timings, ffmpeg=None, out_wav=None):
+    phrases = json.load(open(phrases_path, encoding="utf-8"))
+    text = " ".join(phrases)
+    # Где в общем тексте начинается и кончается каждая фраза (в символах).
+    ranges, pos = [], 0
+    for p in phrases:
+        start = text.index(p, pos)
+        ranges.append((start, start + len(p)))
+        pos = start + len(p)
+
+    # Сервис иногда не отдаёт звук (NoAudioReceived) — повторяем с паузой.
+    for attempt in range(5):
+        try:
+            words = await synthesize(text, voice, rate, out_audio)
+            break
+        except edge_tts.exceptions.NoAudioReceived:
+            if attempt == 4:
+                raise
+            await asyncio.sleep(2 + 2 * attempt)
 
     timings = []
     for a, b in ranges:

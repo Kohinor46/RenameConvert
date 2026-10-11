@@ -2,7 +2,7 @@
 # Собирает промо-ролики для Instagram Reels: promo/RenameConvert-promo-<lang>-<голос>.mp4 (1080×1920).
 # Запуск: FIXTURES=<папка с образцами> scripts/promo/make-promo.sh [ru en]
 # Голоса: VOICE_RU="Milena (Enhanced)" VOICE_EN="Serena (Premium)" (список — say -v "?"); темп — RATE_RU / RATE_EN.
-# Нейросетевые голоса Microsoft: TTS=edge VOICE_RU=ru-RU-SvetlanaNeural (или ru-RU-DmitryNeural), EDGE_RATE=+10%.
+# Нейросетевые голоса Microsoft: TTS=edge VOICE_RU=ru-RU-SvetlanaNeural (или ru-RU-DmitryNeural), EDGE_RATE=+18%.
 #   Нужен edge-tts: python3 -m venv build/tts-venv && build/tts-venv/bin/pip install edge-tts
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -42,7 +42,7 @@ for L in $LANGS; do
   if [[ $TTS == edge ]]; then
     # Весь текст одним куском — естественная речь; время фраз — из меток слов синтезатора.
     "$WORK/promo" spoken "$L" > "$AUDIO/phrases.json"
-    build/tts-venv/bin/python scripts/promo/tts_edge.py "$AUDIO/phrases.json" "$VOICE" "${EDGE_RATE:-+10%}" \
+    build/tts-venv/bin/python scripts/promo/tts_edge.py "$AUDIO/phrases.json" "$VOICE" "${EDGE_RATE:-+18%}" \
       "$AUDIO/full.mp3" "$AUDIO/timings.json" "$FF" "$AUDIO/full.wav"
     "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/full.wav" -ar 48000 -c:a pcm_s16be "$AUDIO/full.aiff"
     TIMINGS="$AUDIO/timings.json"
@@ -62,7 +62,9 @@ for L in $LANGS; do
 
   # Звуковая дорожка по плану рендера: голос, переходы, щелчки.
   "$WORK/promo" mix "$AUDIO/video.mp4.plan" "$AUDIO" "$WORK/whoosh.wav" "$WORK/click.wav" "$AUDIO/audio.wav"
-  "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/audio.wav" -c:a aac_at -b:a 192k "$AUDIO/audio.m4a"
+  # Громкость — к норме соцсетей (−14 LUFS), иначе голос на телефоне тихий.
+  "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/audio.wav" -af "loudnorm=I=-14:TP=-1:LRA=11" \
+    -ar 48000 -c:a aac_at -b:a 192k "$AUDIO/audio.m4a"
   TOTAL=$(awk '/^total/ {printf "%.1f", $2/1000}' "$AUDIO/video.mp4.plan")
 
   "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/video.mp4" -i "$AUDIO/audio.m4a" \

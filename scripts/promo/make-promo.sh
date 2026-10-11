@@ -2,6 +2,8 @@
 # Собирает промо-ролики для Instagram Reels: promo/RenameConvert-promo-<lang>-<голос>.mp4 (1080×1920).
 # Запуск: FIXTURES=<папка с образцами> scripts/promo/make-promo.sh [ru en]
 # Голоса: VOICE_RU="Milena (Enhanced)" VOICE_EN="Serena (Premium)" (список — say -v "?"); темп — RATE_RU / RATE_EN.
+# Нейросетевые голоса Microsoft: TTS=edge VOICE_RU=ru-RU-SvetlanaNeural (или ru-RU-DmitryNeural), EDGE_RATE=+8%.
+#   Нужен edge-tts: python3 -m venv build/tts-venv && build/tts-venv/bin/pip install edge-tts
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 LANGS=${*:-ru en}
@@ -23,13 +25,16 @@ for L in $LANGS; do [[ -f "$WORK/shots/$L/rules.png" ]] || scripts/promo/make-sh
 "$FF" -nostdin -hide_banner -loglevel error -y -f lavfi -i "anoisesrc=d=0.03:c=white:a=0.8" \
   -af "highpass=f=1800,afade=t=out:st=0.004:d=0.026,volume=0.5" -ar 48000 -ac 2 "$WORK/click.wav"
 
+TTS=${TTS:-say}
 for L in $LANGS; do
-  case $L in
-    ru) VOICE=${VOICE_RU:-Milena}; RATE=${RATE_RU:-200} ;;
-    *)  VOICE=${VOICE_EN:-Samantha}; RATE=${RATE_EN:-192} ;;
-  esac
+  if [[ $TTS == edge ]]; then
+    case $L in ru) VOICE=${VOICE_RU:-ru-RU-SvetlanaNeural} ;; *) VOICE=${VOICE_EN:-en-US-AndrewNeural} ;; esac
+  else
+    case $L in ru) VOICE=${VOICE_RU:-Milena}; RATE=${RATE_RU:-200} ;; *) VOICE=${VOICE_EN:-Samantha}; RATE=${RATE_EN:-192} ;; esac
+  fi
   # Имя файла с голосом: RenameConvert-promo-ru-milena-enhanced.mp4
-  SLUG=$(echo "$VOICE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\{1,\}/-/g; s/-$//')
+  # (у голосов Microsoft отбрасываем «ru-RU-» и «Neural»: ru-RU-SvetlanaNeural → svetlana)
+  SLUG=$(echo "$VOICE" | sed -E 's/^[a-z]{2}-[A-Z]{2}-//; s/Neural$//' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\{1,\}/-/g; s/-$//')
   NAME="RenameConvert-promo-$L-$SLUG"
   AUDIO="$WORK/$L-$SLUG"
   rm -rf "$AUDIO" && mkdir -p "$AUDIO"
@@ -37,7 +42,15 @@ for L in $LANGS; do
   # Каждая фраза — отдельный файл: так анимация и субтитры точно попадают в речь.
   DURS=() i=0
   while IFS=$'\t' read -r _scene text; do
-    say -v "$VOICE" -r "$RATE" -o "$AUDIO/$i.aiff" "$text"
+    if [[ $TTS == edge ]]; then
+      build/tts-venv/bin/edge-tts --voice "$VOICE" --rate "${EDGE_RATE:-+8%}" --text "$text" --write-media "$AUDIO/$i.mp3" >/dev/null 2>&1
+      # Обрезаем тишину по краям — анимация и субтитры привязаны к началу фразы.
+      "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/$i.mp3" \
+        -af "silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse" \
+        -ar 48000 -c:a pcm_s16be "$AUDIO/$i.aiff"
+    else
+      say -v "$VOICE" -r "$RATE" -o "$AUDIO/$i.aiff" "$text"
+    fi
     DURS+=("$(afinfo "$AUDIO/$i.aiff" | awk '/estimated duration/ {print $3}')")
     i=$((i + 1))
   done < <("$WORK/promo" lines "$L")

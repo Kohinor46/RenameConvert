@@ -306,37 +306,41 @@ struct Wallpaper: View {
     }
 }
 
-let statusItemX: CGFloat = SW - 300
+/// Правая часть строки меню: значок RenameConvert, Wi‑Fi, батарея, дата — с фиксированной шириной,
+/// чтобы курсор и выпадающее меню точно попадали в значок.
+let menuGap: CGFloat = 16, dateWidth: CGFloat = 150, batteryWidth: CGFloat = 28, wifiWidth: CGFloat = 22, statusIconWidth: CGFloat = 24
+let statusRightEdge: CGFloat = SW - 18 - dateWidth - menuGap - batteryWidth - menuGap - wifiWidth - menuGap
+let statusItemX: CGFloat = statusRightEdge - statusIconWidth / 2
 
 struct MenuBar: View {
     let copy: Copy
-    var appStatus: String? = nil      // nil — значок не показывается
+    var appStatus: String? = nil      // nil — значка нет; "" — только значок; "42%" — значок и проценты
     var offline = false
-    var appIcon: NSImage? = nil
     var body: some View {
         HStack(spacing: 18) {
             ForEach(Array(copy.menus.enumerated()), id: \.offset) { i, m in
                 Text(m).font(.system(size: 15, weight: i == 0 ? .bold : .regular))
             }
             Spacer()
-            Image(systemName: offline ? "wifi.slash" : "wifi")
-            Image(systemName: "battery.75percent")
-            Text(copy.date).font(.system(size: 15))
+            HStack(spacing: menuGap) {
+                HStack(spacing: 4) {
+                    if let appStatus {
+                        if !appStatus.isEmpty { Text(appStatus).font(.system(size: 14, weight: .semibold)) }
+                        // Тот же значок, что у приложения в строке меню.
+                        Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 16, weight: .semibold))
+                            .frame(width: statusIconWidth)
+                    }
+                }
+                .frame(width: 90, alignment: .trailing)
+                Image(systemName: offline ? "wifi.slash" : "wifi").frame(width: wifiWidth)
+                Image(systemName: "battery.75percent").frame(width: batteryWidth)
+                Text(copy.date).font(.system(size: 15)).lineLimit(1).frame(width: dateWidth, alignment: .trailing)
+            }
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 18)
         .frame(width: SW, height: 30)
         .background(.black.opacity(0.18))
-        .overlay(alignment: .topLeading) {
-            if let appStatus, let appIcon {
-                HStack(spacing: 4) {
-                    Image(nsImage: appIcon).resizable().frame(width: 20, height: 20)
-                    if !appStatus.isEmpty { Text(appStatus).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white) }
-                }
-                .frame(height: 30)
-                .offset(x: statusItemX - 10)
-            }
-        }
     }
 }
 
@@ -506,40 +510,60 @@ struct Captions: View {
 
 // MARK: - Сцены
 
+/// Ракурс сцены: ключевые положения камеры (секунда сцены → камера), между ними — плавный переход.
+/// Время -1 означает конец сцены.
 struct Shot {
-    let from: Camera
-    let to: Camera
+    let keys: [(Double, Camera)]
+    init(from: Camera, to: Camera) { keys = [(0, from), (-1, to)] }
+    init(keys: [(Double, Camera)]) { self.keys = keys }
+
+    func camera(at t: Double, duration d: Double) -> Camera {
+        let ks = keys.map { ($0.0 < 0 ? d : min($0.0, d), $0.1) }
+        guard t > ks[0].0 else { return ks[0].1 }
+        for i in 1..<ks.count where t <= ks[i].0 {
+            let span = max(0.001, ks[i].0 - ks[i - 1].0)
+            return Camera.lerp(ks[i - 1].1, ks[i].1, easeInOut((t - ks[i - 1].0) / span))
+        }
+        return ks.last!.1
+    }
+}
+
+func cam(_ x: CGFloat, _ y: CGFloat, _ zoom: CGFloat, _ yaw: Double, _ pitch: Double, _ roll: Double, _ radius: CGFloat) -> Camera {
+    Camera(focus: CGPoint(x: x, y: y), zoom: zoom, yaw: yaw, pitch: pitch, roll: roll, focusRadius: radius)
 }
 
 /// Ракурсы: фокус в координатах экрана 1600×1000.
 let photoIcon = CGPoint(x: 605, y: 262), photoLabel = CGPoint(x: 605, y: 330)
 let shots: [Shot] = [
-    Shot(from: Camera(focus: CGPoint(x: 640, y: 320), zoom: 3.6, yaw: -24, pitch: 12, roll: -6, focusRadius: 380),
-         to: Camera(focus: CGPoint(x: 620, y: 315), zoom: 4.1, yaw: -20, pitch: 10, roll: -5, focusRadius: 380)),
-    Shot(from: Camera(focus: CGPoint(x: 605, y: 330), zoom: 4.6, yaw: 22, pitch: 14, roll: 5, focusRadius: 360),
-         to: Camera(focus: CGPoint(x: 615, y: 328), zoom: 5.0, yaw: 18, pitch: 12, roll: 4, focusRadius: 360)),
-    Shot(from: Camera(focus: CGPoint(x: 820, y: 400), zoom: 1.9, yaw: -16, pitch: 10, roll: -3, focusRadius: 560),
-         to: Camera(focus: CGPoint(x: 860, y: 420), zoom: 2.2, yaw: -12, pitch: 8, roll: -2, focusRadius: 560)),
-    Shot(from: Camera(focus: CGPoint(x: 780, y: 300), zoom: 2.9, yaw: 18, pitch: 8, roll: 3, focusRadius: 440),
-         to: Camera(focus: CGPoint(x: 760, y: 330), zoom: 3.2, yaw: 14, pitch: 7, roll: 2, focusRadius: 440)),
-    Shot(from: Camera(focus: CGPoint(x: 800, y: 420), zoom: 2.3, yaw: -20, pitch: 12, roll: -4, focusRadius: 480),
-         to: Camera(focus: CGPoint(x: 800, y: 480), zoom: 1.5, yaw: -14, pitch: 10, roll: -3, focusRadius: 620)),
-    Shot(from: Camera(focus: CGPoint(x: 1300, y: 60), zoom: 3.2, yaw: 20, pitch: 16, roll: 4, focusRadius: 420),
-         to: Camera(focus: CGPoint(x: 1310, y: 170), zoom: 2.8, yaw: 16, pitch: 14, roll: 3, focusRadius: 460)),
-    Shot(from: Camera(focus: CGPoint(x: 700, y: 330), zoom: 2.6, yaw: -18, pitch: 12, roll: -4, focusRadius: 460),
-         to: Camera(focus: CGPoint(x: 780, y: 340), zoom: 2.2, yaw: -14, pitch: 10, roll: -3, focusRadius: 520)),
-    Shot(from: Camera(focus: CGPoint(x: 620, y: 330), zoom: 2.2, yaw: 16, pitch: 10, roll: 3, focusRadius: 520),
-         to: Camera(focus: CGPoint(x: 640, y: 560), zoom: 2.2, yaw: 12, pitch: 8, roll: 2, focusRadius: 520)),
-    Shot(from: Camera(focus: CGPoint(x: 1280, y: 300), zoom: 2.3, yaw: -20, pitch: 10, roll: -4, focusRadius: 520),
-         to: Camera(focus: CGPoint(x: 1330, y: 500), zoom: 2.6, yaw: -16, pitch: 9, roll: -3, focusRadius: 500)),
-    Shot(from: Camera(focus: CGPoint(x: 1340, y: 30), zoom: 4.2, yaw: 18, pitch: 18, roll: 4, focusRadius: 400),
-         to: Camera(focus: CGPoint(x: 1360, y: 40), zoom: 3.8, yaw: 14, pitch: 16, roll: 3, focusRadius: 420)),
-    Shot(from: Camera(focus: CGPoint(x: 800, y: 500), zoom: 1.25, yaw: -12, pitch: 8, roll: -2, focusRadius: 700),
-         to: Camera(focus: CGPoint(x: 800, y: 470), zoom: 1.45, yaw: -6, pitch: 6, roll: -1, focusRadius: 700)),
-    Shot(from: Camera(focus: CGPoint(x: 800, y: 480), zoom: 2.0, yaw: 10, pitch: 8, roll: 2, focusRadius: 560),
-         to: Camera(focus: CGPoint(x: 800, y: 480), zoom: 2.25, yaw: 6, pitch: 6, roll: 1, focusRadius: 560)),
-    Shot(from: Camera(focus: CGPoint(x: 800, y: 470), zoom: 1.7, yaw: -8, pitch: 6, roll: -1, focusRadius: 640),
-         to: Camera(focus: CGPoint(x: 800, y: 470), zoom: 1.9, yaw: -4, pitch: 4, roll: 0, focusRadius: 640)),
+    // 0. Макро на имя файла
+    Shot(from: cam(640, 320, 3.4, -24, 12, -6, 520), to: cam(620, 318, 3.9, -20, 10, -5, 520)),
+    // 1. Ввод расширения
+    Shot(from: cam(605, 330, 4.3, 22, 14, 5, 480), to: cam(615, 328, 4.7, 18, 12, 4, 480)),
+    // 2. Диалог Finder → «Свойства»: тип всё ещё HEIF
+    Shot(keys: [(0, cam(1000, 440, 2.3, -16, 10, -3, 560)), (1.5, cam(1010, 450, 2.4, -14, 9, -3, 560)),
+                (2.1, cam(800, 545, 2.5, -12, 8, -2, 560)), (-1, cam(790, 550, 2.6, -12, 8, -2, 560))]),
+    // 3. Поиск онлайн-конвертера: текст запроса и подсказки
+    Shot(from: cam(640, 380, 2.3, 18, 8, 3, 600), to: cam(650, 400, 2.5, 14, 7, 2, 600)),
+    // 4. Загрузка, ожидание, «а если файлов двадцать?»
+    Shot(from: cam(800, 420, 2.2, -20, 12, -4, 600), to: cam(800, 480, 1.5, -14, 10, -3, 720)),
+    // 5. Значок в строке меню и меню приложения
+    Shot(from: cam(1330, 40, 3.0, 20, 16, 4, 520), to: cam(1420, 170, 2.6, 16, 14, 3, 560)),
+    // 6. Переименование с RenameConvert: имя → диалог → «Свойства»: теперь JPEG
+    Shot(keys: [(0, cam(600, 330, 2.6, -18, 12, -4, 520)), (1.1, cam(620, 335, 2.6, -17, 11, -4, 520)),
+                (1.5, cam(1040, 470, 2.3, -15, 10, -3, 560)), (2.3, cam(1040, 470, 2.3, -14, 10, -3, 560)),
+                (2.8, cam(800, 545, 2.5, -13, 9, -3, 560)), (-1, cam(790, 550, 2.6, -12, 8, -2, 560))]),
+    // 7. Форматы
+    Shot(from: cam(600, 300, 2.0, 16, 10, 3, 640), to: cam(620, 560, 2.0, 12, 8, 2, 640)),
+    // 8. Окно-вопрос: от центра к кнопке
+    Shot(from: cam(1300, 300, 2.0, -20, 10, -4, 620), to: cam(1400, 500, 2.3, -16, 9, -3, 600)),
+    // 9. Строка меню без Wi‑Fi
+    Shot(from: cam(1290, 25, 4.0, 18, 18, 4, 480), to: cam(1320, 30, 3.6, 14, 16, 3, 500)),
+    // 10. Общий план
+    Shot(from: cam(800, 500, 1.25, -12, 8, -2, 760), to: cam(800, 470, 1.45, -6, 6, -1, 760)),
+    // 11. Бесплатно
+    Shot(from: cam(800, 480, 2.0, 10, 8, 2, 640), to: cam(800, 480, 2.25, 6, 6, 1, 640)),
+    // 12. Финал
+    Shot(from: cam(800, 470, 1.7, -8, 6, -1, 700), to: cam(800, 470, 1.9, -4, 4, 0, 700)),
 ]
 
 struct ScreenScene: View {
@@ -552,7 +576,7 @@ struct ScreenScene: View {
         ZStack(alignment: .topLeading) {
             Wallpaper()
             content
-            MenuBar(copy: copy, appStatus: menuStatus, offline: scene == 9, appIcon: appIcon)
+            MenuBar(copy: copy, appStatus: menuStatus, offline: scene == 9)
                 .position(x: SW / 2, y: 15)
         }
         .frame(width: SW, height: SH)
@@ -561,7 +585,7 @@ struct ScreenScene: View {
 
     var menuStatus: String? {
         guard scene >= 5 else { return nil }
-        if scene == 9 { return t < 1.4 ? "\(Int(clamp(t / 1.4) * 100))%" : "✓" }
+        if scene == 9 { return t < 1.4 ? "\(Int(clamp(t / 1.4) * 100))%" : "" }
         return ""
     }
 
@@ -596,7 +620,7 @@ struct ScreenScene: View {
         var dialog = 0.0, converted = false, info: (String, Bool)? = nil
         var cursorKeys: [(Double, CGPoint)] = [(0, CGPoint(x: 700, y: 420))]
         var clicks: [Double] = []
-        let useButton = CGPoint(x: 922, y: 455)
+        let useButton = CGPoint(x: 1090, y: 496)
         switch state {
         case .selected:
             cursorKeys = [(0, CGPoint(x: 760, y: 420)), (1.0, CGPoint(x: 640, y: 335))]
@@ -840,7 +864,7 @@ struct ScreenScene: View {
                 .background(RoundedRectangle(cornerRadius: 10).fill(Color(white: 0.96)))
                 .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
                 .scaleEffect(0.9 + 0.1 * spring((t - 0.7) / 0.4), anchor: .topTrailing)
-                .position(x: icon.x + 10, y: 34 + 150)
+                .position(x: min(icon.x - 12 + 150, SW - 8 - 150), y: 34 + 150)
             }
             Cursor(position: Path2D(keys: [(0, CGPoint(x: icon.x - 80, y: 160)), (0.6, CGPoint(x: icon.x + 4, y: 18))]).at(t), clicks: [0.65], t: t)
         }
@@ -960,7 +984,7 @@ struct FrameState {
         local = t - timeline.sceneStarts[scene]
         d = timeline.sceneDurations[scene]
         let shot = shotsList[scene]
-        var c = Camera.lerp(shot.from, shot.to, easeInOut(local / d))
+        var c = shot.camera(at: local, duration: d)
         // «Рывок» камеры на склейке и лёгкая тряска руки.
         c.zoom *= CGFloat(1 + 0.05 * (1 - easeOut(local / 0.3)))
         c.focus.x += CGFloat(sin(t * 1.7) * 4 + sin(t * 3.1) * 2)
@@ -1008,11 +1032,11 @@ func depthOfField(_ image: CGImage, focusRadius: CGFloat) -> CGImage {
     let input = CIImage(cgImage: image)
     let center = CIVector(x: W / 2, y: H * 0.58)            // у Core Image ось Y снизу вверх
     let mask = CIFilter(name: "CIRadialGradient", parameters: [
-        "inputCenter": center, "inputRadius0": focusRadius * 0.55, "inputRadius1": focusRadius * 1.35,
+        "inputCenter": center, "inputRadius0": focusRadius * 0.85, "inputRadius1": focusRadius * 1.8,
         "inputColor0": CIColor.black, "inputColor1": CIColor.white,
     ])!.outputImage!.cropped(to: input.extent)
     let blurred = CIFilter(name: "CIMaskedVariableBlur", parameters: [
-        kCIInputImageKey: input.clampedToExtent(), "inputMask": mask, kCIInputRadiusKey: 22,
+        kCIInputImageKey: input.clampedToExtent(), "inputMask": mask, kCIInputRadiusKey: 16,
     ])!.outputImage!.cropped(to: input.extent)
     return ciContext.createCGImage(blurred, from: input.extent)!
 }

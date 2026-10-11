@@ -172,3 +172,5 @@
 "Отправляйте только USDT в сети TON — иначе средства могут потеряться." = "Posílejte pouze USDT v síti TON — jinak se prostředky mohou ztratit.";
 "Поддержать проект ♥…" = "Podpořit projekt ♥…";
 "Поддержать" = "Podpořit";
+"Не удалось положить оригинал в Корзину, файл не изменён: %@" = "Originál se nepodařilo přesunout do koše, soubor nebyl změněn: %@";
+"У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "Aktualizace nemá kontrolní součet — stáhněte ji ručně ze stránky vydání.";

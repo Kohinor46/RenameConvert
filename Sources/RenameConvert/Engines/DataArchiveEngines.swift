@@ -10,6 +10,7 @@ enum ConvertError: LocalizedError {
     case noVideoTrack
     case noAudioTrack
     case sourceGone
+    case backupFailed(String)
     case replaceFailed(String)
     case toolFailed(String)
 
@@ -23,8 +24,92 @@ enum ConvertError: LocalizedError {
         case .noVideoTrack: return String(localized: "В файле нет видео.")
         case .noAudioTrack: return String(localized: "В файле нет звуковой дорожки.")
         case .sourceGone: return String(localized: "Файл переименовали или удалили во время конвертации.")
+        case .backupFailed(let why): return String(localized: "Не удалось положить оригинал в Корзину, файл не изменён: \(why)")
         case .replaceFailed(let why): return String(localized: "Не удалось заменить файл: \(why)")
         case .toolFailed(let why): return why.isEmpty ? String(localized: "Ошибка конвертации.") : why
+        }
+    }
+}
+
+/// Запуск внешней программы. stdout и stderr читаются всё время работы — иначе, когда буфер канала
+/// (~64 КБ) заполнится, программа встанет навсегда. Отмена задачи завершает процесс.
+enum Subprocess {
+    struct Result {
+        let status: Int32
+        let crashed: Bool
+        let stderr: String
+    }
+
+    /// `onOutput` получает stdout кусками по мере поступления.
+    static func run(_ executable: URL, _ args: [String], onOutput: (@Sendable (Data) -> Void)? = nil) async throws -> Result {
+        try Task.checkCancellation()
+        let process = Process()
+        process.executableURL = executable
+        process.arguments = args
+        let stdout = Pipe(), stderr = Pipe()
+        process.standardOutput = stdout
+        process.standardError = stderr
+        let errors = Collector()
+
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Result, Error>) in
+                let group = DispatchGroup()
+                group.enter()
+                process.terminationHandler = { _ in group.leave() }
+                do {
+                    try process.run()
+                } catch {
+                    cont.resume(throwing: error)
+                    return
+                }
+                // Отмена могла прийти до запуска — тогда onCancel процесс ещё не застал.
+                if Task.isCancelled { stop(process) }
+                drain(stdout.fileHandleForReading, group: group) { onOutput?($0) }
+                drain(stderr.fileHandleForReading, group: group) { errors.append($0) }
+                group.notify(queue: .global()) {
+                    cont.resume(returning: Result(status: process.terminationStatus,
+                                                  crashed: process.terminationReason == .uncaughtSignal,
+                                                  stderr: errors.text))
+                }
+            }
+        } onCancel: {
+            stop(process)
+        }
+    }
+
+    /// SIGTERM, а если через 2 с процесс ещё жив (ffmpeg бывает, что долго дочитывает вход) — SIGKILL.
+    private static func stop(_ process: Process) {
+        guard process.isRunning else { return }
+        process.terminate()
+        let pid = process.processIdentifier
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+            if process.isRunning { kill(pid, SIGKILL) }
+        }
+    }
+
+    private static func drain(_ handle: FileHandle, group: DispatchGroup, _ sink: @escaping (Data) -> Void) {
+        group.enter()
+        DispatchQueue.global(qos: .utility).async {
+            while let data = try? handle.read(upToCount: 1 << 16), !data.isEmpty { sink(data) }
+            group.leave()
+        }
+    }
+
+    /// stderr целиком не нужен: храним не больше 1 МБ (начало важнее — там заголовок ffmpeg).
+    private final class Collector: @unchecked Sendable {
+        private let lock = NSLock()
+        private var data = Data()
+
+        func append(_ chunk: Data) {
+            lock.lock()
+            defer { lock.unlock() }
+            if data.count < 1 << 20 { data.append(chunk.prefix((1 << 20) - data.count)) }
+        }
+
+        var text: String {
+            lock.lock()
+            defer { lock.unlock() }
+            return String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 }
@@ -32,24 +117,9 @@ enum ConvertError: LocalizedError {
 enum Shell {
     /// Запускает системную утилиту; ошибка — с текстом из stderr.
     static func run(_ tool: String, _ args: [String]) async throws {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: tool)
-            process.arguments = args
-            let stderr = Pipe()
-            process.standardError = stderr
-            process.standardOutput = FileHandle.nullDevice
-            process.terminationHandler = { p in
-                let message = String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if p.terminationStatus == 0 {
-                    cont.resume()
-                } else {
-                    cont.resume(throwing: ConvertError.toolFailed(message))
-                }
-            }
-            do { try process.run() } catch { cont.resume(throwing: error) }
-        }
+        let result = try await Subprocess.run(URL(fileURLWithPath: tool), args)
+        try Task.checkCancellation()
+        guard result.status == 0, !result.crashed else { throw ConvertError.toolFailed(result.stderr) }
     }
 }
 

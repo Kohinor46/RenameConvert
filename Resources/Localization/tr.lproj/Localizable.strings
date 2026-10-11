@@ -172,3 +172,5 @@
 "Отправляйте только USDT в сети TON — иначе средства могут потеряться." = "Yalnızca TON ağında USDT gönderin — aksi takdirde paranız kaybolabilir.";
 "Поддержать проект ♥…" = "Projeyi Destekle ♥…";
 "Поддержать" = "Destek Ol";
+"Не удалось положить оригинал в Корзину, файл не изменён: %@" = "Orijinal Çöp Sepeti’ne taşınamadı, dosya değiştirilmedi: %@";
+"У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "Güncellemenin sağlama toplamı yok — sürümler sayfasından elle indirin.";

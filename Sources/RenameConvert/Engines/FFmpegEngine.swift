@@ -16,66 +16,70 @@ enum FFmpeg {
     static var isAvailable: Bool { url != nil }
 
     /// Запускает ffmpeg; прогресс считается по out_time из `-progress`.
-    static func run(_ args: [String], input: URL, progress: ProgressHandler? = nil) async throws {
+    /// `duration` — если длительность уже известна, файл второй раз не разбирается.
+    static func run(_ args: [String], input: URL, duration: Double? = nil, progress: ProgressHandler? = nil) async throws {
         guard let url else { throw ConvertError.unsupported }
-        let duration = progress == nil ? nil : try? await probeDuration(input)
+        var duration = duration
+        if progress != nil, duration == nil { duration = (try? await probe(input))?.duration }
+        var full = ["-hide_banner", "-nostdin", "-y", "-loglevel", "error", "-nostats"]
+        if progress != nil { full += ["-progress", "pipe:1"] }
 
-        let process = Process()
-        process.executableURL = url
-        process.arguments = ["-hide_banner", "-nostdin", "-y", "-loglevel", "error", "-progress", "pipe:1", "-nostats"] + args
-        let stdout = Pipe(), stderr = Pipe()
-        process.standardOutput = stdout
-        process.standardError = stderr
-
-        if let progress, let duration, duration > 0 {
-            stdout.fileHandleForReading.readabilityHandler = { handle in
-                let text = String(decoding: handle.availableData, as: UTF8.self)
-                for line in text.split(separator: "\n") where line.hasPrefix("out_time_us=") {
-                    if let us = Double(line.dropFirst("out_time_us=".count)) {
-                        progress(min(1, max(0, us / 1_000_000 / duration)))
-                    }
-                }
-            }
+        let lines = LineSplitter { line in
+            guard let progress, let duration, duration > 0, line.hasPrefix("out_time_us="),
+                  let us = Double(line.dropFirst("out_time_us=".count)) else { return }
+            progress(min(1, max(0, us / 1_000_000 / duration)))
         }
-
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-                process.terminationHandler = { p in
-                    stdout.fileHandleForReading.readabilityHandler = nil
-                    let message = String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
-                    if p.terminationReason == .uncaughtSignal {
-                        cont.resume(throwing: CancellationError())
-                    } else if p.terminationStatus == 0 {
-                        cont.resume()
-                    } else {
-                        Log.error("ffmpeg \(args.joined(separator: " ")): \(message)")
-                        cont.resume(throwing: ConvertError.toolFailed(message.split(separator: "\n").last.map(String.init) ?? ""))
-                    }
-                }
-                do { try process.run() } catch { cont.resume(throwing: error) }
-            }
-        } onCancel: {
-            process.terminate()
+        let result = try await Subprocess.run(url, full + args) { lines.feed($0) }
+        try Task.checkCancellation()
+        guard result.status == 0, !result.crashed else {
+            Log.error("ffmpeg \(args.joined(separator: " ")): \(result.crashed ? "аварийное завершение" : result.stderr)")
+            throw ConvertError.toolFailed(result.stderr.split(separator: "\n").last.map(String.init) ?? "")
         }
     }
 
-    /// Длительность из заголовка `ffmpeg -i` («Duration: 00:01:02.50»).
-    static func probeDuration(_ input: URL) async throws -> Double? {
-        guard let url else { return nil }
-        let process = Process()
-        process.executableURL = url
-        process.arguments = ["-hide_banner", "-nostdin", "-i", input.path]
-        let stderr = Pipe()
-        process.standardError = stderr
-        process.standardOutput = FileHandle.nullDevice
-        try process.run()
-        let text = String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-        process.waitUntilExit()
-        guard let range = text.range(of: #"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)"#, options: .regularExpression) else { return nil }
-        let parts = text[range].dropFirst("Duration: ".count).split(separator: ":").compactMap { Double($0) }
-        guard parts.count == 3 else { return nil }
-        return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    struct MediaInfo {
+        var duration: Double?
+        var videoCodec: String?
+        var audioCodecs: [String] = []
+    }
+
+    /// Длительность и кодеки из заголовка `ffmpeg -i` («Duration: 00:01:02.50», «Stream #0:0: Video: hevc …»).
+    static func probe(_ input: URL) async throws -> MediaInfo {
+        guard let url else { return MediaInfo() }
+        let text = try await Subprocess.run(url, ["-hide_banner", "-nostdin", "-i", input.path]).stderr
+        var info = MediaInfo()
+        if let range = text.range(of: #"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)"#, options: .regularExpression) {
+            let parts = text[range].dropFirst("Duration: ".count).split(separator: ":").compactMap { Double($0) }
+            if parts.count == 3 { info.duration = parts[0] * 3600 + parts[1] * 60 + parts[2] }
+        }
+        for line in text.split(separator: "\n") where line.contains("Stream #") {
+            for kind in ["Video", "Audio"] {
+                guard let r = line.range(of: ": \(kind): ") else { continue }
+                let codec = String(line[r.upperBound...].prefix { $0.isLetter || $0.isNumber || $0 == "_" })
+                if kind == "Video" { info.videoCodec = info.videoCodec ?? codec } else { info.audioCodecs.append(codec) }
+            }
+        }
+        return info
+    }
+}
+
+/// Собирает строки из кусков вывода (кусок может оборваться посреди строки).
+private final class LineSplitter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var buffer = Data()
+    private let onLine: (Substring) -> Void
+
+    init(_ onLine: @escaping (Substring) -> Void) { self.onLine = onLine }
+
+    func feed(_ chunk: Data) {
+        lock.lock()
+        defer { lock.unlock() }
+        buffer.append(chunk)
+        while let i = buffer.firstIndex(of: UInt8(ascii: "\n")) {
+            let line = String(decoding: buffer[buffer.startIndex..<i], as: UTF8.self)
+            buffer.removeSubrange(buffer.startIndex...i)
+            onLine(Substring(line))
+        }
     }
 }
 
@@ -95,10 +99,14 @@ enum FFmpegEngine {
         if params.stripMetadata { common += ["-map_metadata", "-1"] }
         if ext != "mkv" { common += ["-movflags", "+faststart"] }
 
-        // «Авто» без фильтров: сначала пробуем переупаковать без перекодирования.
-        if params.videoCodec == .auto, filters.isEmpty {
+        // «Авто» без фильтров: переупаковываем без перекодирования, но только если результат
+        // откроют QuickTime и iOS — иначе ffmpeg охотно положит в MP4 и VP9, и Opus.
+        let info = try await FFmpeg.probe(input)
+        if params.videoCodec == .auto, filters.isEmpty, ext == "mkv" || isQuickTimeCompatible(info, ext: ext) {
+            var copy = common + ["-c", "copy"]
+            if info.videoCodec == "hevc", ext != "mkv" { copy += ["-tag:v", "hvc1"] }
             do {
-                try await FFmpeg.run(common + ["-c", "copy", output.path], input: input, progress: progress)
+                try await FFmpeg.run(copy + [output.path], input: input, duration: info.duration, progress: progress)
                 return
             } catch is CancellationError {
                 throw CancellationError()
@@ -114,7 +122,7 @@ enum FFmpegEngine {
         if hevc, ext != "mkv" { args += ["-tag:v", "hvc1"] }   // чтобы QuickTime и iOS открывали HEVC
         args += ["-c:a", "aac_at", "-b:a", "192k", output.path]
         do {
-            try await FFmpeg.run(args, input: input, progress: progress)
+            try await FFmpeg.run(args, input: input, duration: info.duration, progress: progress)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
@@ -123,8 +131,19 @@ enum FFmpegEngine {
             let bitrate = args.firstIndex(of: "-q:v").map { i -> [String] in
                 var a = args; a.replaceSubrange(i...(i + 1), with: ["-b:v", hevc ? "5M" : "8M"]); return a
             } ?? args
-            try await FFmpeg.run(bitrate, input: input, progress: progress)
+            try await FFmpeg.run(bitrate, input: input, duration: info.duration, progress: progress)
         }
+    }
+
+    /// Кодеки, которые QuickTime и iOS воспроизводят из MOV/MP4/M4V.
+    private static let quickTimeVideo: Set = ["h264", "hevc"]
+    private static let quickTimeAudio: Set = ["aac", "alac", "mp3", "ac3", "eac3"]
+    private static let movOnlyAudio: Set = ["pcm_s16le", "pcm_s16be", "pcm_s24le", "pcm_s24be", "pcm_f32le", "pcm_f32be"]
+
+    private static func isQuickTimeCompatible(_ info: FFmpeg.MediaInfo, ext: String) -> Bool {
+        guard let video = info.videoCodec, quickTimeVideo.contains(video) else { return false }
+        let audio = ext == "mov" ? quickTimeAudio.union(movOnlyAudio) : quickTimeAudio
+        return info.audioCodecs.allSatisfy(audio.contains)
     }
 
     // MARK: Видео → GIF (с подбором палитры — заметно лучше, чем без неё)
@@ -162,7 +181,7 @@ enum FFmpegEngine {
 
     static func frame(_ input: URL, to output: URL, type: UTType, quality: Double, workDir: URL) async throws {
         let png = workDir.appendingPathComponent("frame.png")
-        let duration = (try? await FFmpeg.probeDuration(input)) ?? 0
+        let duration = (try? await FFmpeg.probe(input))?.duration ?? 0
         try await FFmpeg.run(["-ss", String(min(1, duration / 2)), "-i", input.path, "-frames:v", "1", png.path], input: input)
         if type == .png {
             try FileManager.default.moveItem(at: png, to: output)

@@ -3,10 +3,18 @@
 import Foundation
 
 /// Ловит пары событий переименования FSEvents (старый путь → новый путь).
+/// Пара — два события об одном и том же файле (inode) в одной папке.
 final class RenameWatcher {
+    private struct Event {
+        let path: String
+        let fileID: UInt64?
+        let time: Date
+        var directory: String { (path as NSString).deletingLastPathComponent }
+    }
+
     private var stream: FSEventStreamRef?
-    private var pendingOld: [(path: String, time: Date)] = []
-    private var pendingNew: [(path: String, time: Date)] = []
+    /// События без пары (ждут вторую половину не дольше 3 с).
+    private var pending: [Event] = []
     private var roots: [String] = []
     private let libraryPrefix = NSHomeDirectory() + "/Library/"
     private let cloudPrefixes = [NSHomeDirectory() + "/Library/Mobile Documents/",
@@ -25,11 +33,17 @@ final class RenameWatcher {
         let callback: FSEventStreamCallback = { _, info, count, pathsPtr, flagsPtr, _ in
             guard let info else { return }
             let me = Unmanaged<RenameWatcher>.fromOpaque(info).takeUnretainedValue()
-            let paths = (unsafeBitCast(pathsPtr, to: NSArray.self) as? [String]) ?? []
+            // С UseExtendedData вместо путей приходят словари: путь и inode файла.
+            let items = (unsafeBitCast(pathsPtr, to: NSArray.self) as? [NSDictionary]) ?? []
+            let entries = items.map { item in
+                (path: item[kFSEventStreamEventExtendedDataPathKey] as? String ?? "",
+                 fileID: (item[kFSEventStreamEventExtendedFileIDKey] as? NSNumber)?.uint64Value)
+            }
             let flags = Array(UnsafeBufferPointer(start: flagsPtr, count: count))
-            me.handle(paths: paths, flags: flags)
+            me.handle(entries: entries, flags: flags)
         }
-        let flags = FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes)
+        let flags = FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes
+                                             | kFSEventStreamCreateFlagUseExtendedData)
         guard let s = FSEventStreamCreate(nil, callback, &ctx, paths as CFArray,
                                           FSEventStreamEventId(kFSEventStreamEventIdSinceNow), 0.2, flags) else {
             Log.error("Не удалось создать FSEventStream для \(paths)")
@@ -58,31 +72,36 @@ final class RenameWatcher {
         return path.split(separator: "/").contains { $0.hasPrefix(".") }
     }
 
-    private func handle(paths: [String], flags: [FSEventStreamEventFlags]) {
+    private func handle(entries: [(path: String, fileID: UInt64?)], flags: [FSEventStreamEventFlags]) {
         let now = Date()
-        pendingOld.removeAll { now.timeIntervalSince($0.time) > 3 }
-        pendingNew.removeAll { now.timeIntervalSince($0.time) > 3 }
+        pending.removeAll { now.timeIntervalSince($0.time) > 3 }
 
         let renamed = FSEventStreamEventFlags(kFSEventStreamEventFlagItemRenamed)
         let isFile = FSEventStreamEventFlags(kFSEventStreamEventFlagItemIsFile)
 
-        for (path, f) in zip(paths, flags) where f & renamed != 0 && f & isFile != 0 && !shouldIgnore(path) {
-            let dir = (path as NSString).deletingLastPathComponent
-            let sameDir: ((path: String, time: Date)) -> Bool = { ($0.path as NSString).deletingLastPathComponent == dir }
-
-            if FileManager.default.fileExists(atPath: path) {
-                if let i = pendingOld.lastIndex(where: sameDir) {
-                    onRename?(pendingOld.remove(at: i).path, path)
-                } else {
-                    pendingNew.append((path, now))
-                }
-            } else {
-                if let i = pendingNew.lastIndex(where: sameDir) {
-                    onRename?(path, pendingNew.remove(at: i).path)
-                } else {
-                    pendingOld.append((path, now))
-                }
+        for (entry, f) in zip(entries, flags) where f & renamed != 0 && f & isFile != 0
+            && !entry.path.isEmpty && !shouldIgnore(entry.path) {
+            let event = Event(path: entry.path, fileID: entry.fileID, time: now)
+            guard let i = pending.lastIndex(where: { isPair($0, event) }) else {
+                pending.append(event)
+                continue
+            }
+            let other = pending.remove(at: i)
+            let fm = FileManager.default
+            switch (fm.fileExists(atPath: other.path), fm.fileExists(atPath: event.path)) {
+            case (false, true): onRename?(other.path, event.path)
+            case (true, false): onRename?(event.path, other.path)
+            case (true, true): break                 // сменился только регистр букв — формат тот же
+            case (false, false): pending.append(event)   // файл уже переименовали снова — ждём следующее событие
             }
         }
+    }
+
+    /// Две половины одного переименования: разные имена в одной папке, один и тот же файл.
+    /// Без inode (некоторые сетевые диски) — как раньше, только по папке.
+    private func isPair(_ a: Event, _ b: Event) -> Bool {
+        guard a.path != b.path, a.directory == b.directory else { return false }
+        if let x = a.fileID, let y = b.fileID { return x == y }
+        return true
     }
 }

@@ -3,6 +3,7 @@
 import AppKit
 import CryptoKit
 import Observation
+import Security
 
 @MainActor
 @Observable
@@ -88,10 +89,11 @@ final class Updater {
             let zip = work.appendingPathComponent("update.zip")
             try fm.moveItem(at: downloaded, to: zip)
 
-            if let expected = release.sha256 {
-                let actual = SHA256.hash(data: try Data(contentsOf: zip)).map { String(format: "%02x", $0) }.joined()
-                guard actual == expected.lowercased() else { throw UpdateError.checksumMismatch }
-            }
+            // Приложение подписано ad-hoc, поэтому codesign подлинность не подтверждает —
+            // без контрольной суммы из GitHub API обновление не ставим.
+            guard let expected = release.sha256 else { throw UpdateError.noChecksum }
+            let actual = SHA256.hash(data: try Data(contentsOf: zip)).map { String(format: "%02x", $0) }.joined()
+            guard actual == expected.lowercased() else { throw UpdateError.checksumMismatch }
 
             let unpacked = work.appendingPathComponent("unpacked")
             try await Shell.run("/usr/bin/ditto", ["-x", "-k", zip.path, unpacked.path])
@@ -101,7 +103,7 @@ final class Updater {
                   info["CFBundleIdentifier"] as? String == Bundle.main.bundleIdentifier else {
                 throw UpdateError.badArchive
             }
-            try await Shell.run("/usr/bin/codesign", ["--verify", "--deep", newApp.path])
+            try await Shell.run("/usr/bin/codesign", ["--verify", "--deep", "--strict"] + Self.sameDeveloperRequirement + [newApp.path])
 
             _ = try fm.replaceItemAt(appURL, withItemAt: newApp)
             Log.info("Установлено обновление \(release.version), перезапуск")
@@ -111,6 +113,17 @@ final class Updater {
             Log.error("Установка обновления: \(error)")
             state = .failed(error.localizedDescription)
         }
+    }
+
+    /// Если текущая сборка подписана сертификатом разработчика — новая должна быть подписана тем же (Team ID).
+    /// У ad-hoc-подписи Team ID нет, и проверка сводится к целостности подписи.
+    private static var sameDeveloperRequirement: [String] {
+        var code: SecStaticCode?
+        var info: CFDictionary?
+        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &code) == errSecSuccess, let code,
+              SecCodeCopySigningInformation(code, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let team = (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String else { return [] }
+        return ["-R", "=anchor apple generic and certificate leaf[subject.OU] = \"\(team)\""]
     }
 
     // MARK: Разбор ответа
@@ -146,13 +159,14 @@ final class Updater {
 }
 
 enum UpdateError: LocalizedError {
-    case noReleases, badArchive, checksumMismatch
+    case noReleases, badArchive, checksumMismatch, noChecksum
 
     var errorDescription: String? {
         switch self {
         case .noReleases: return String(localized: "Релизов пока нет.")
         case .badArchive: return String(localized: "Архив обновления повреждён или не подходит.")
         case .checksumMismatch: return String(localized: "Контрольная сумма архива не совпала — обновление не установлено.")
+        case .noChecksum: return String(localized: "У обновления нет контрольной суммы — скачайте его вручную со страницы релизов.")
         }
     }
 }

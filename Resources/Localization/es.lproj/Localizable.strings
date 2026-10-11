@@ -172,3 +172,5 @@
 "Отправляйте только USDT в сети TON — иначе средства могут потеряться." = "Envía solo USDT en la red TON; de lo contrario, los fondos podrían perderse.";
 "Поддержать проект ♥…" = "Apoyar el proyecto ♥…";
 "Поддержать" = "Apoyar";
+"Не удалось положить оригинал в Корзину, файл не изменён: %@" = "No se pudo mover el original a la Papelera, el archivo no se ha modificado: %@";
+"У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "La actualización no tiene suma de verificación: descárgala manualmente desde la página de versiones.";

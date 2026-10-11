@@ -75,6 +75,10 @@ final class AppModel {
     @ObservationIgnored private let watcher = RenameWatcher()
     /// Пути, события по которым игнорируем (наши собственные перемещения).
     @ObservationIgnored private var suppressed: [String: Date] = [:]
+    /// Конвертации, ждущие свободного места (уже показаны в activeJobs, но ещё не запущены).
+    @ObservationIgnored private var queued: [ConversionJob] = []
+    /// Сколько конвертаций идёт одновременно: двадцать ffmpeg разом машину не ускорят.
+    private static let maxRunningJobs = max(2, ProcessInfo.processInfo.activeProcessorCount / 4)
     @ObservationIgnored private let notifications = NotificationManager()
     @ObservationIgnored private lazy var askPanel = AskPanelController(model: self)
 
@@ -236,8 +240,19 @@ final class AppModel {
     // MARK: Конвертация
 
     private func start(_ job: ConversionJob) {
+        activeJobs.append(ActiveJob(id: job.id, title: "\(job.oldName) → \(job.newName)"))
+        queued.append(job)
+        startQueued()
+    }
+
+    private func startQueued() {
+        while !queued.isEmpty, activeJobs.filter({ $0.task != nil }).count < Self.maxRunningJobs {
+            launch(queued.removeFirst())
+        }
+    }
+
+    private func launch(_ job: ConversionJob) {
         let id = job.id
-        activeJobs.append(ActiveJob(id: id, title: "\(job.oldName) → \(job.newName)"))
         let task = Task { [weak self] in
             let result: Result<URL?, Error>
             do {
@@ -254,7 +269,16 @@ final class AppModel {
     }
 
     func cancel(_ job: ActiveJob) {
-        job.task?.cancel()
+        // Меню хранит снимок: задачу могли запустить уже после того, как его нарисовали.
+        guard let job = activeJobs.first(where: { $0.id == job.id }) else { return }
+        if let task = job.task {
+            task.cancel()
+        } else {
+            // Ещё в очереди — просто убираем.
+            queued.removeAll { $0.id == job.id }
+            activeJobs.removeAll { $0.id == job.id }
+            Log.info("Отменено до запуска: \(job.title)")
+        }
     }
 
     /// Общий прогресс для значка в строке меню (`nil` — неизвестен).
@@ -271,6 +295,7 @@ final class AppModel {
     private func finish(_ job: ConversionJob, _ result: Result<URL?, Error>) {
         activeJobs.removeAll { $0.id == job.id }
         suppressed[job.path] = Date()
+        startQueued()
 
         switch result {
         case .success(let trashed):

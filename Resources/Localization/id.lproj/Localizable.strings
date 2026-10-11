@@ -172,3 +172,5 @@
 "Отправляйте только USDT в сети TON — иначе средства могут потеряться." = "Kirim hanya USDT di jaringan TON — jika tidak, dana bisa hilang.";
 "Поддержать проект ♥…" = "Dukung Proyek ♥…";
 "Поддержать" = "Dukung";
+"Не удалось положить оригинал в Корзину, файл не изменён: %@" = "Tidak dapat memindahkan asli ke Tempat Sampah, file tidak diubah: %@";
+"У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "Pembaruan tidak memiliki checksum — unduh secara manual dari halaman rilis.";

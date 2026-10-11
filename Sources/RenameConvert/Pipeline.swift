@@ -44,7 +44,9 @@ enum Pipeline {
         try Task.checkCancellation()
 
         guard fm.fileExists(atPath: job.path) else { throw ConvertError.sourceGone }
-        let trashed = job.keepOriginal ? backupToTrash(input, as: job.oldName, workDir: workDir) : nil
+        // Резервная копия не получилась — файл не трогаем: пользователь просил сохранить оригинал.
+        let trashed = try job.keepOriginal ? backupToTrash(input, as: job.oldName, workDir: workDir) : nil
+        copyFinderMetadata(from: job.path, to: output.path)
 
         if rename(output.path, job.path) != 0 {
             throw ConvertError.replaceFailed(String(cString: strerror(errno)))
@@ -76,10 +78,7 @@ enum Pipeline {
         case .audio:
             try await MediaEngine.convertAudio(input, to: output, ext: to, params: p)
         case .document:
-            let from = job.plan.from
-            try await MainActor.run {
-                try DocumentEngine.convert(input, from: from, to: output, ext: to, pageSize: p.pdfPageSize.points)
-            }
+            try await DocumentEngine.convert(input, from: job.plan.from, to: output, ext: to, pageSize: p.pdfPageSize.points)
         case .data:
             try DataEngine.convert(input, from: job.plan.from, to: output, ext: to)
         case .archive:
@@ -100,7 +99,7 @@ enum Pipeline {
     }
 
     /// Кладёт оригинал (жёсткая ссылка на исходные данные) в Корзину под старым именем.
-    private static func backupToTrash(_ input: URL, as name: String, workDir: URL) -> URL? {
+    private static func backupToTrash(_ input: URL, as name: String, workDir: URL) throws -> URL? {
         let fm = FileManager.default
         let dir = workDir.appendingPathComponent("backup", isDirectory: true)
         let copy = dir.appendingPathComponent(name)
@@ -112,7 +111,36 @@ enum Pipeline {
             return result as URL?
         } catch {
             Log.error("Резервная копия не создана: \(error)")
-            return nil
+            throw ConvertError.backupFailed(error.localizedDescription)
+        }
+    }
+
+    /// Расширенные атрибуты, которые описывают старое содержимое и новому файлу не подходят.
+    private static let staleAttributes: Set = ["com.apple.ResourceFork", "com.apple.TextEncoding"]
+
+    /// Переносит на новый файл то, что видно в Finder: права, теги, комментарий, «Откуда», дату создания.
+    private static func copyFinderMetadata(from source: String, to target: String) {
+        copyfile(source, target, nil, copyfile_flags_t(COPYFILE_SECURITY))
+
+        let size = listxattr(source, nil, 0, XATTR_NOFOLLOW)
+        if size > 0 {
+            var names = [CChar](repeating: 0, count: size)
+            if listxattr(source, &names, size, XATTR_NOFOLLOW) == size {
+                for raw in names.split(separator: 0) {
+                    let name = String(decoding: raw.map { UInt8(bitPattern: $0) }, as: UTF8.self)
+                    guard !staleAttributes.contains(name) else { continue }
+                    let length = getxattr(source, name, nil, 0, 0, XATTR_NOFOLLOW)
+                    guard length >= 0 else { continue }
+                    var value = [UInt8](repeating: 0, count: length)
+                    guard getxattr(source, name, &value, length, 0, XATTR_NOFOLLOW) == length else { continue }
+                    setxattr(target, name, value, length, 0, XATTR_NOFOLLOW)
+                }
+            }
+        }
+
+        let fm = FileManager.default
+        if let created = (try? fm.attributesOfItem(atPath: source))?[.creationDate] {
+            try? fm.setAttributes([.creationDate: created], ofItemAtPath: target)
         }
     }
 }

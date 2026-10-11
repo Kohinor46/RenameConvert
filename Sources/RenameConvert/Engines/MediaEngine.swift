@@ -145,7 +145,8 @@ enum MediaEngine {
         guard let src = CGImageSourceCreateWithURL(input as CFURL, nil), CGImageSourceGetCount(src) > 0,
               let first = CGImageSourceCreateImageAtIndex(src, 0, nil) else { throw ConvertError.unreadable }
         let count = CGImageSourceGetCount(src)
-        let width = first.width / 2 * 2, height = first.height / 2 * 2
+        // Кодекам нужны чётные размеры; совсем узкий GIF растягиваем до 2 px, иначе запись не начнётся.
+        let width = max(2, first.width / 2 * 2), height = max(2, first.height / 2 * 2)
 
         let writer = try AVAssetWriter(outputURL: output, fileType: videoFileType(ext))
         let codec: AVVideoCodecType = params.videoCodec == .hevc ? .hevc : .h264
@@ -164,12 +165,20 @@ enum MediaEngine {
         var time = 0.0
         for i in 0..<count {
             try Task.checkCancellation()
-            while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(5)) }
+            // После сбоя записи isReadyForMoreMediaData навсегда false — выходим с ошибкой, а не ждём вечно.
+            while !input.isReadyForMoreMediaData {
+                if writer.status == .failed { throw writer.error ?? ConvertError.encodeFailed }
+                try await Task.sleep(for: .milliseconds(5))
+            }
+            defer {
+                time += gifDelay(src, at: i)   // и для пропущенного кадра, чтобы не сбить тайминг
+                progress(Double(i + 1) / Double(count))
+            }
             guard let frame = CGImageSourceCreateImageAtIndex(src, i, nil),
                   let buffer = pixelBuffer(from: frame, pool: adaptor.pixelBufferPool, width: width, height: height) else { continue }
-            adaptor.append(buffer, withPresentationTime: CMTime(seconds: time, preferredTimescale: 600))
-            time += gifDelay(src, at: i)
-            progress(Double(i + 1) / Double(count))
+            guard adaptor.append(buffer, withPresentationTime: CMTime(seconds: time, preferredTimescale: 600)) else {
+                throw writer.error ?? ConvertError.encodeFailed
+            }
         }
         input.markAsFinished()
         writer.endSession(atSourceTime: CMTime(seconds: time, preferredTimescale: 600))
@@ -207,6 +216,17 @@ enum MediaEngine {
                              workDir: URL, progress: @escaping ProgressHandler) async throws {
         let asset = AVURLAsset(url: input)
         guard try await !asset.loadTracks(withMediaType: .audio).isEmpty else { throw ConvertError.noAudioTrack }
+        // afconvert читает звук прямо из MOV/MP4: без промежуточного AAC (для WAV/FLAC — без лишних потерь)
+        // и с выбранным битрейтом для M4A.
+        do {
+            try await convertAudio(input, to: output, ext: ext, params: params)
+            return
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            Log.info("afconvert не прочитал звук из видео (\(error)), извлекаем через AVFoundation")
+            try? FileManager.default.removeItem(at: output)
+        }
         guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
             throw ConvertError.encodeFailed
         }

@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "The archive checksum doesn’t match — the update wasn’t installed.";
 "Показать журнал" = "Show Log";
 "Показать журнал в Finder" = "Show Log in Finder";
+"Язык" = "Language";
+"Язык интерфейса" = "App Language";
+"Как в системе" = "System Default";
+"Язык изменится после перезапуска." = "The language will change after relaunch.";
+"Перезапустить" = "Relaunch";

@@ -4,40 +4,74 @@ import QuickLookThumbnailing
 import SwiftUI
 import UniformTypeIdentifiers
 
-enum SettingsTab: Hashable {
+enum SettingsTab: Hashable, CaseIterable {
     case general, rules, params, folders, formats, history, about
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .general: return "Основные"
+        case .rules: return "Правила"
+        case .params: return "Параметры"
+        case .folders: return "Папки"
+        case .formats: return "Форматы"
+        case .history: return "История"
+        case .about: return "О программе"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .general: return "gearshape"
+        case .rules: return "list.bullet.rectangle"
+        case .params: return "slider.horizontal.3"
+        case .folders: return "folder"
+        case .formats: return "square.grid.2x2"
+        case .history: return "clock.arrow.circlepath"
+        case .about: return "info.circle"
+        }
+    }
 }
 
+/// Настройки с боковой панелью, как в «Системных настройках»: разделы не прячутся,
+/// сколько бы их ни было и какими бы длинными ни были подписи на другом языке.
+/// (NavigationSplitView не держит заданную ширину колонки, поэтому раскладка своя.)
 struct SettingsView: View {
     static let windowID = "settings"
     @Bindable var model: AppModel
 
     var body: some View {
-        TabView(selection: $model.settingsTab) {
-            Tab("Основные", systemImage: "gearshape", value: .general) {
-                GeneralTab(model: model)
+        HStack(spacing: 0) {
+            List(SettingsTab.allCases, id: \.self, selection: Binding(
+                get: { model.settingsTab }, set: { if let tab = $0 { model.settingsTab = tab } })) { tab in
+                Label(tab.title, systemImage: tab.symbol)
+                    .padding(.vertical, 2)
             }
-            Tab("Правила", systemImage: "list.bullet.rectangle", value: .rules) {
-                RulesTab(model: model)
-            }
-            Tab("Параметры", systemImage: "slider.horizontal.3", value: .params) {
-                Form { ParamsSections(params: $model.params) }
-                    .formStyle(.grouped)
-            }
-            Tab("Папки", systemImage: "folder", value: .folders) {
-                FoldersTab(model: model)
-            }
-            Tab("Форматы", systemImage: "square.grid.2x2", value: .formats) {
-                FormatsTab()
-            }
-            Tab("История", systemImage: "clock.arrow.circlepath", value: .history) {
-                HistoryTab(model: model)
-            }
-            Tab("О программе", systemImage: "info.circle", value: .about) {
-                AboutTab(model: model)
-            }
+            .listStyle(.sidebar)
+            .frame(width: 210)
+
+            Divider()
+
+            // Минимальная ширина обязательна: без неё длинный текст при расчёте раскладки
+            // получает почти нулевую ширину и растягивает раздел на тысячи пунктов в высоту.
+            detail
+                .frame(minWidth: 620, maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .frame(width: 680, height: 520)
+        // Фиксированный размер: иначе таблицы и списки растягивают окно по своей «идеальной» высоте.
+        .frame(width: 880, height: 580)
+    }
+
+    @ViewBuilder private var detail: some View {
+        switch model.settingsTab {
+        case .general: GeneralTab(model: model)
+        case .rules: RulesTab(model: model)
+        case .params:
+            Form { ParamsSections(params: $model.params) }
+                .formStyle(.grouped)
+        case .folders: FoldersTab(model: model)
+        case .formats: FormatsTab()
+        case .history: HistoryTab(model: model)
+        case .about: AboutTab(model: model)
+        }
     }
 }
 
@@ -54,6 +88,22 @@ private struct GeneralTab: View {
                 Toggle("Запускать при входе в систему", isOn: Binding(
                     get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
                 Toggle("Показывать уведомления", isOn: $model.notify)
+            }
+
+            Section("Язык") {
+                Picker("Язык интерфейса", selection: Binding(
+                    get: { model.appLanguage }, set: { model.setAppLanguage($0) })) {
+                    Text("Как в системе").tag("")
+                    Divider()
+                    ForEach(AppLanguage.all, id: \.code) { Text(verbatim: $0.name).tag($0.code) }
+                }
+                if model.languageChanged {
+                    HStack {
+                        Text("Язык изменится после перезапуска.").foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Перезапустить", action: AppRelauncher.relaunch)
+                    }
+                }
             }
 
             Section {
@@ -129,6 +179,7 @@ private struct RulesTab: View {
                 .width(160)
             }
             .onDeleteCommand { deleteSelected() }
+            .frame(maxHeight: .infinity)
             .overlay {
                 if model.rules.isEmpty {
                     ContentUnavailableView("Правил нет", systemImage: "list.bullet.rectangle",

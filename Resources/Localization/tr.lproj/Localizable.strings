@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Arşivin sağlama toplamı eşleşmedi — güncelleme yüklenmedi.";
 "Показать журнал" = "Günlüğü Göster";
 "Показать журнал в Finder" = "Günlüğü Finder’da Göster";
+"Язык" = "Dil";
+"Язык интерфейса" = "Uygulama Dili";
+"Как в системе" = "Sistem Varsayılanı";
+"Язык изменится после перезапуска." = "Dil, yeniden başlattıktan sonra değişecek.";
+"Перезапустить" = "Yeniden Başlat";

@@ -1,86 +1,101 @@
+<!-- languages -->
+🌐 **English** · [Русский](docs/README.ru.md) · [Deutsch](docs/README.de.md) · [Français](docs/README.fr.md) · [Español](docs/README.es.md) · [Italiano](docs/README.it.md) · [Português (Brasil)](docs/README.pt-BR.md) · [Nederlands](docs/README.nl.md) · [Polski](docs/README.pl.md) · [Українська](docs/README.uk.md) · [Čeština](docs/README.cs.md) · [Svenska](docs/README.sv.md) · [Türkçe](docs/README.tr.md) · [العربية](docs/README.ar.md) · [עברית](docs/README.he.md) · [हिन्दी](docs/README.hi.md) · [Bahasa Indonesia](docs/README.id.md) · [Tiếng Việt](docs/README.vi.md) · [ไทย](docs/README.th.md) · [日本語](docs/README.ja.md) · [한국어](docs/README.ko.md) · [简体中文](docs/README.zh-Hans.md) · [繁體中文](docs/README.zh-Hant.md)
+<!-- /languages -->
+
 # RenameConvert
 
-Приложение для macOS в строке меню: меняете расширение файла в Finder — меняется его формат.
+A macOS menu bar app: change a file's extension in Finder and its format changes too.
 `photo.heic` → `photo.jpg`, `clip.mov` → `clip.mp4`, `clip.mov` → `clip.gif`, `report.docx` → `report.pdf`.
 
-![Иконка](Resources/AppIcon.png)
+![Icon](Resources/AppIcon.png)
 
-## Что умеет
+## Install
 
-| Категория | Из | В |
+Download **RenameConvert.dmg** from the [latest release](https://github.com/Kohinor46/RenameConvert/releases/latest)
+and drag the app to Applications. Requires macOS 15 or later, Apple Silicon or Intel.
+
+The app is not notarized, so macOS blocks the first launch: right-click the app → **Open**
+(or **Open Anyway** in System Settings → Privacy & Security).
+
+## Features
+
+| Category | From | To |
 |---|---|---|
-| Картинки | jpg, png, heic, webp, gif, tiff, bmp, RAW и др. | jpg, png, heic, avif, **webp**, gif, tiff, bmp, jp2, ico, icns, psd, tga, pdf |
-| Видео | mov, mp4, m4v, 3gp, **mkv, avi, webm, flv, wmv, mpg, ts, mts, ogv** | mov, mp4, m4v, **mkv** · **gif** · звук (m4a, **mp3**, wav, aiff, caf, flac) · кадр (jpg, png…) |
-| GIF | gif | mp4, mov, m4v, webp (анимированный) |
-| Аудио | mp3, m4a, aac, wav, aiff, caf, flac, **ogg, opus, wma, ac3, amr, ape** | m4a, **mp3**, wav, aiff, caf, flac |
-| Документы | txt, rtf, html, docx, doc, odt, webarchive, pdf | txt, rtf, html, docx, doc, odt, pdf · PDF → картинка (1-я страница) |
-| Данные | json, plist | json, plist |
-| Архивы | zip, tar, tar.gz, tar.bz2, tar.xz, 7z | те же |
+| Images | jpg, png, heic, webp, gif, tiff, bmp, RAW and more | jpg, png, heic, avif, **webp**, gif, tiff, bmp, jp2, ico, icns, psd, tga, pdf |
+| Video | mov, mp4, m4v, 3gp, **mkv, avi, webm, flv, wmv, mpg, ts, mts, ogv** | mov, mp4, m4v, **mkv** · **gif** · audio (m4a, **mp3**, wav, aiff, caf, flac) · frame (jpg, png…) |
+| GIF | gif | mp4, mov, m4v, webp (animated) |
+| Audio | mp3, m4a, aac, wav, aiff, caf, flac, **ogg, opus, wma, ac3, amr, ape** | m4a, **mp3**, wav, aiff, caf, flac |
+| Documents | txt, rtf, html, docx, doc, odt, webarchive, pdf | txt, rtf, html, docx, doc, odt, pdf · PDF → image (first page) |
+| Data | json, plist | json, plist |
+| Archives | zip, tar, tar.gz, tar.bz2, tar.xz, 7z | the same |
 
-Форматы, которых нет в macOS (WebP, MP3, MKV, AVI, WebM, OGG…), конвертирует встроенный **FFmpeg 7.1**
-(LGPL 2.1, с LAME и libwebp). Он собирается из официальных исходников скриптом `scripts/build-ffmpeg.sh`
-со сверкой SHA-256 и зависит только от системных библиотек.
+Formats that macOS can't handle on its own (WebP, MP3, MKV, AVI, WebM, OGG…) are converted by the built-in
+**FFmpeg 7.1** (LGPL 2.1, with LAME and libwebp). It is built from official sources by `scripts/build-ffmpeg.sh`,
+with SHA-256 checks, and depends only on system libraries.
 
-**Правила.** Для каждой пары «из → в» (расширение, категория или «любой») можно выбрать:
-спросить, конвертировать сразу или не конвертировать, а также сохранять ли оригинал.
-Срабатывает самое конкретное правило; по умолчанию видео — «Спросить», остальное — «Конвертировать сразу».
+**Rules.** For any "from → to" pair (an extension, a category, or "any") you choose what happens:
+ask first, convert right away, or don't convert — and whether to keep the original.
+The most specific rule wins; by default video is "Ask" and everything else is "Convert immediately".
 
-**Окно-вопрос** появляется в правом верхнем углу: можно поменять параметры именно для этой конвертации
-и запомнить решение для пары расширений.
+**Confirmation panel** appears in the top-right corner: change the parameters for this particular conversion
+and remember the decision for this pair of extensions.
 
-**Параметры:** качество JPEG/HEIC/AVIF; для видео — кодек (без перекодирования / H.264 / HEVC),
-разрешение (4K…480p, без увеличения), частота кадров, удаление геопозиции и личных метаданных;
-частота и ширина GIF; битрейт AAC; размер страницы PDF.
+**Parameters:** JPEG/HEIC/AVIF/WebP quality; for video — codec (no re-encoding / H.264 / HEVC),
+resolution (4K…480p, never upscaled), frame rate, removal of location and personal metadata;
+GIF frame rate and width; AAC/MP3 bitrate; PDF page size.
 
-**Обновления:** кнопка «Проверить обновления» и автоматическая проверка раз в сутки по
-[релизам на GitHub](https://github.com/Kohinor46/RenameConvert/releases). Обновление скачивается,
-проверяется по SHA-256 и подписи и устанавливается с перезапуском.
+**Updates:** a "Check for Updates" button and an automatic daily check against
+[GitHub Releases](https://github.com/Kohinor46/RenameConvert/releases). The update is downloaded,
+verified by SHA-256 and code signature, and installed with a relaunch.
 
-**Отчёт об ошибке:** меню → «Сообщить об ошибке…» (или кнопка в уведомлении об ошибке) создаёт письмо
-разработчику с описанием, сведениями о системе и журналом работы во вложении. Журнал:
+**Bug report:** menu → "Report a Bug…" (or the button in an error notification) creates an email to the
+developer with your description, system info, and the app log attached. Log:
 `~/Library/Logs/RenameConvert/RenameConvert.log`.
 
-**23 языка:** русский, английский, немецкий, французский, испанский, итальянский, португальский (Бразилия),
-нидерландский, польский, украинский, чешский, шведский, турецкий, арабский, иврит, хинди, индонезийский,
-вьетнамский, тайский, японский, корейский, китайский (упрощённый и традиционный).
+**23 languages:** English, Russian, German, French, Spanish, Italian, Portuguese (Brazil), Dutch, Polish,
+Ukrainian, Czech, Swedish, Turkish, Arabic, Hebrew, Hindi, Indonesian, Vietnamese, Thai, Japanese, Korean,
+Chinese (Simplified and Traditional).
 
-**Ещё:** папки для слежения и исключения, прогресс и отмена в строке меню, история с кнопкой
-«Вернуть оригинал», оригинал в Корзину, уведомления, автозапуск. Всё локально.
+**Also:** watched folders and exclusions, progress and cancel in the menu bar, history with "Restore Original",
+originals moved to the Trash, notifications, launch at login. Everything runs locally — files never leave your Mac.
 
-## Сборка
+## Building
 
-Нужны macOS 15+ и Command Line Tools (`xcode-select --install`). Xcode не обязателен,
-но проект открывается в нём как Swift Package (`open Package.swift`).
+Requires macOS 15+ and the Command Line Tools (`xcode-select --install`). Xcode is optional,
+but the project opens in it as a Swift package (`open Package.swift`).
 
 ```bash
-./build.sh            # build/RenameConvert.app (универсальный: Apple Silicon + Intel); при первом запуске соберёт FFmpeg (~15 мин)
-./build.sh install    # установить в ~/Applications и запустить
-./build.sh dist       # build/RenameConvert.zip (для автообновления) и build/RenameConvert.dmg
-./build.sh release    # dist + релиз v<версия> на GitHub
+./build.sh            # build/RenameConvert.app (universal: Apple Silicon + Intel); builds FFmpeg on first run (~15 min)
+./build.sh install    # install to ~/Applications and launch
+./build.sh dist       # build/RenameConvert.zip (for auto-update) and build/RenameConvert.dmg
+./build.sh release    # dist + publish release v<version> on GitHub
 ```
 
-Переводы: `scripts/extract-strings.py` собирает строки интерфейса в `Resources/Localization/keys.json`,
-`--check` проверяет, что во всех языках есть все строки и совпадают подстановки.
-Промо-ролики: `scripts/promo/make-promo.sh` (озвучка `say`, кадры SwiftUI, сведение FFmpeg).
+Translations: `scripts/extract-strings.py` collects UI strings into `Resources/Localization/keys.json`;
+`--check` verifies that every language has every string with matching placeholders.
+Promo videos: `scripts/promo/make-promo.sh` (voice-over with `say`, SwiftUI frames, muxed with FFmpeg).
 
-Приложение подписано ad-hoc. На другом маке при первом запуске macOS его заблокирует:
-нужно открыть через правый клик → «Открыть» (или «Всё равно открыть» в Настройках → Конфиденциальность и безопасность).
+## Architecture
 
-## Устройство
-
-| Файл | Что делает |
+| File | Purpose |
 |---|---|
-| `RenameWatcher.swift` | FSEvents: ловит пары «старое имя → новое имя» |
-| `Formats.swift` | Реестр форматов: какой движок для пары расширений |
-| `Rules.swift` | Правила и параметры конвертации |
-| `Pipeline.swift` | Рабочая папка, запуск движка, оригинал в Корзину, атомарная замена |
-| `Engines/ImageEngine.swift` | Картинки (ImageIO), PDF → картинка |
-| `Engines/MediaEngine.swift` | Видео, GIF, аудио (AVFoundation, afconvert) |
-| `Engines/DocumentEngine.swift` | Документы (NSAttributedString, PDFKit, CoreText) |
-| `Engines/DataArchiveEngines.swift` | JSON ↔ plist, архивы (bsdtar), общие ошибки |
-| `Engines/FFmpegEngine.swift` | Встроенный FFmpeg: WebP, MP3, MKV, AVI, WebM, OGG, GIF с палитрой |
-| `Updater.swift` | Проверка и установка обновлений из GitHub Releases |
-| `BugReport.swift`, `Log.swift` | Отчёт об ошибке письмом, журнал работы |
-| `AppModel.swift` | Настройки, очередь, вопросы, история, уведомления |
-| `AskPanel.swift`, `ParamsForm.swift` | Окно-вопрос и форма параметров |
-| `RenameConvertApp.swift`, `SettingsView.swift` | Меню в строке меню и окно настроек |
+| `RenameWatcher.swift` | FSEvents: catches "old name → new name" pairs |
+| `Formats.swift` | Format registry: which engine handles a pair of extensions |
+| `Rules.swift` | Rules and conversion parameters |
+| `Pipeline.swift` | Work folder, running the engine, original to the Trash, atomic replace |
+| `Engines/ImageEngine.swift` | Images (ImageIO), PDF → image |
+| `Engines/MediaEngine.swift` | Video, GIF, audio (AVFoundation, afconvert) |
+| `Engines/DocumentEngine.swift` | Documents (NSAttributedString, PDFKit, CoreText) |
+| `Engines/DataArchiveEngines.swift` | JSON ↔ plist, archives (bsdtar), shared errors |
+| `Engines/FFmpegEngine.swift` | Built-in FFmpeg: WebP, MP3, MKV, AVI, WebM, OGG, palette GIFs |
+| `Updater.swift` | Checking for and installing updates from GitHub Releases |
+| `BugReport.swift`, `Log.swift` | Bug report by email, app log |
+| `AppModel.swift` | Settings, queue, prompts, history, notifications |
+| `AskPanel.swift`, `ParamsForm.swift` | Confirmation panel and parameters form |
+| `RenameConvertApp.swift`, `SettingsView.swift` | Menu bar menu and settings window |
+
+## License of bundled components
+
+FFmpeg is included as a separate executable (`Contents/Helpers/ffmpeg`) under LGPL 2.1, built with LAME (LGPL)
+and libwebp (BSD). Their license texts are in `Contents/Resources/Licenses`; the exact build script is
+`scripts/build-ffmpeg.sh`.

@@ -78,6 +78,8 @@ def to_key(parts):
 def extract():
     keys = []
     for path in sorted(SOURCES.rglob("*.swift")):
+        if path.name == "Languages.swift":   # самоназвания языков не переводятся
+            continue
         for parts, line in literals(path.read_text()):
             raw = "".join(v for k, v in parts if k == "char")
             if not CYRILLIC.search(raw) or "Log.info(" in line or "Log.error(" in line:

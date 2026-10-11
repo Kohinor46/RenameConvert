@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Checksum arsip tidak cocok — pembaruan tidak diinstal.";
 "Показать журнал" = "Tampilkan Log";
 "Показать журнал в Finder" = "Tampilkan Log di Finder";
+"Язык" = "Bahasa";
+"Язык интерфейса" = "Bahasa App";
+"Как в системе" = "Default Sistem";
+"Язык изменится после перезапуска." = "Bahasa akan berubah setelah app dibuka ulang.";
+"Перезапустить" = "Buka Ulang";

@@ -106,12 +106,7 @@ final class Updater {
             _ = try fm.replaceItemAt(appURL, withItemAt: newApp)
             Log.info("Установлено обновление \(release.version), перезапуск")
 
-            // Перезапуск: новый экземпляр откроется, когда этот завершится.
-            let relaunch = Process()
-            relaunch.executableURL = URL(fileURLWithPath: "/bin/sh")
-            relaunch.arguments = ["-c", "sleep 1; /usr/bin/open \"$0\"", appURL.path]
-            try relaunch.run()
-            NSApp.terminate(nil)
+            AppRelauncher.relaunch()
         } catch {
             Log.error("Установка обновления: \(error)")
             state = .failed(error.localizedDescription)

@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "A soma de verificação do arquivo compactado não confere — a atualização não foi instalada.";
 "Показать журнал" = "Mostrar Registro";
 "Показать журнал в Finder" = "Mostrar Registro no Finder";
+"Язык" = "Idioma";
+"Язык интерфейса" = "Idioma do App";
+"Как в системе" = "Padrão do Sistema";
+"Язык изменится после перезапуска." = "O idioma mudará após reiniciar.";
+"Перезапустить" = "Reiniciar";

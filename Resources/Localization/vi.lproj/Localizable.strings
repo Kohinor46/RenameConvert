@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Tổng kiểm của kho lưu trữ không khớp — bản cập nhật chưa được cài đặt.";
 "Показать журнал" = "Hiển thị nhật ký";
 "Показать журнал в Finder" = "Hiển thị nhật ký trong Finder";
+"Язык" = "Ngôn ngữ";
+"Язык интерфейса" = "Ngôn ngữ của ứng dụng";
+"Как в системе" = "Mặc định hệ thống";
+"Язык изменится после перезапуска." = "Ngôn ngữ sẽ thay đổi sau khi khởi động lại.";
+"Перезапустить" = "Khởi động lại";

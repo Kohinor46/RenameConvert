@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Arkivets kontrollsumma stämmer inte — uppdateringen installerades inte.";
 "Показать журнал" = "Visa logg";
 "Показать журнал в Finder" = "Visa logg i Finder";
+"Язык" = "Språk";
+"Язык интерфейса" = "Appens språk";
+"Как в системе" = "Systemets standard";
+"Язык изменится после перезапуска." = "Språket ändras när appen startas om.";
+"Перезапустить" = "Starta om";

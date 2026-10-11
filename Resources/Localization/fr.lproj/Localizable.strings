@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "La somme de contrôle de l’archive ne correspond pas : la mise à jour n’a pas été installée.";
 "Показать журнал" = "Afficher le journal";
 "Показать журнал в Finder" = "Afficher le journal dans le Finder";
+"Язык" = "Langue";
+"Язык интерфейса" = "Langue de l’app";
+"Как в системе" = "Langue du système";
+"Язык изменится после перезапуска." = "La langue changera après le redémarrage.";
+"Перезапустить" = "Redémarrer";

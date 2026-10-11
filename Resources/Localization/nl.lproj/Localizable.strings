@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Controlesom van het archief komt niet overeen — update niet geïnstalleerd.";
 "Показать журнал" = "Toon logboek";
 "Показать журнал в Finder" = "Toon logboek in Finder";
+"Язык" = "Taal";
+"Язык интерфейса" = "Taal van app";
+"Как в системе" = "Systeemstandaard";
+"Язык изменится после перезапуска." = "De taal wordt gewijzigd na opnieuw starten.";
+"Перезапустить" = "Start opnieuw";

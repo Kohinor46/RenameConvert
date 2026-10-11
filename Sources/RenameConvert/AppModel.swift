@@ -58,6 +58,10 @@ final class AppModel {
     var settingsTab: SettingsTab = .general
     /// Текст, которым заполнится окно отчёта об ошибке.
     var reportDraft: String?
+    /// Язык интерфейса, выбранный в приложении («» — как в системе).
+    private(set) var appLanguage = AppLanguage.selected
+    /// Язык выбран, но приложение ещё не перезапущено.
+    private(set) var languageChanged = false
 
     let updater = Updater()
     /// Открывает окно настроек; задаётся из SwiftUI (там есть openWindow).
@@ -137,6 +141,14 @@ final class AppModel {
             Log.error("Автозапуск: \(error)")
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+
+    func setAppLanguage(_ code: String) {
+        guard code != appLanguage else { return }
+        AppLanguage.select(code)
+        appLanguage = code
+        languageChanged = true
+        Log.info("Язык интерфейса: \(code.isEmpty ? "системный" : code)")
     }
 
     func chooseFolders(prompt: String) -> [String] {

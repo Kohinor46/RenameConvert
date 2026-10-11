@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Kontrolní součet archivu nesouhlasí — aktualizace nebyla nainstalována.";
 "Показать журнал" = "Zobrazit protokol";
 "Показать журнал в Finder" = "Zobrazit protokol ve Finderu";
+"Язык" = "Jazyk";
+"Язык интерфейса" = "Jazyk aplikace";
+"Как в системе" = "Podle systému";
+"Язык изменится после перезапуска." = "Jazyk se změní po opětovném spuštění.";
+"Перезапустить" = "Spustit znovu";

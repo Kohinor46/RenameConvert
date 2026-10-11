@@ -154,3 +154,8 @@
 "Контрольная сумма архива не совпала — обновление не установлено." = "Suma kontrolna archiwum się nie zgadza — uaktualnienie nie zostało zainstalowane.";
 "Показать журнал" = "Pokaż dziennik";
 "Показать журнал в Finder" = "Pokaż dziennik w Finderze";
+"Язык" = "Język";
+"Язык интерфейса" = "Język aplikacji";
+"Как в системе" = "Domyślny systemowy";
+"Язык изменится после перезапуска." = "Język zmieni się po ponownym uruchomieniu.";
+"Перезапустить" = "Uruchom ponownie";

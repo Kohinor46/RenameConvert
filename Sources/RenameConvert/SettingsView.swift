@@ -403,7 +403,7 @@ private struct HistoryRow: View {
                 }
                 .lineLimit(1)
                 .truncationMode(.middle)
-                Text("\((entry.directory as NSString).abbreviatingWithTildeInPath) · \(entry.date, format: .relative(presentation: .named))")
+                Text("\(((entry.directory as NSString).standardizingPath as NSString).abbreviatingWithTildeInPath) · \(entry.date, format: .relative(presentation: .named))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

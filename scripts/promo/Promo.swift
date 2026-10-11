@@ -1,7 +1,10 @@
-// Рендер промо-ролика для Instagram Reels (1080×1920, 30 кадр/с) без звука.
-// Использование: promo <ru|en> <папка со скриншотами> <durations.json> <out.mp4> <AppIcon.png>
-//                promo lines <ru|en>
-// durations.json — длительности сцен в секундах (по длине озвучки).
+// Промо-ролик для Instagram Reels (1080×1920, 30 кадр/с): сценки «как запись экрана»,
+// переходы-свайпы, субтитры по словам. Звук собирает make-promo.sh по плану, который пишет этот рендер.
+//
+//   promo lines <ru|en>                                   — фразы озвучки: «<сцена>\t<текст>» по строке
+//   promo render <ru|en> <shots> <durations.json> <out.mp4> <icon.png>
+//        durations.json — длительности фраз (сек) в порядке `lines`; рядом пишется <out.mp4>.plan
+//   promo mix <plan> <папка с N.aiff> <whoosh.wav> <click.wav> <out.wav>   — сведение звука по плану
 
 import AppKit
 import AVFoundation
@@ -9,382 +12,705 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 let W: CGFloat = 1080, H: CGFloat = 1920, FPS = 30
+let swipeDuration = 0.38          // длительность свайпа между сценами
+let prePad = 0.12, gap = 0.1, postPad = 0.22
 
 // MARK: - Тексты
 
 struct Copy {
-    let lines: [String]          // озвучка = субтитры, по сцене
-    let hook: String
-    let hookSub: String
-    let categories: [(String, String, String)]   // символ, название, пример
+    let phrases: [[String]]                 // по сценам; каждая фраза — отдельный файл озвучки
+    let hook: [String]
+    let folder: String
+    let dialog: (String, String) -> String  // (старое, новое расширение)
+    let keep: (String) -> String
+    let use: (String) -> String
+    let convertedTitle: String
+    let restored: String
+    let ffmpeg: String
     let features: [(String, String)]
-    let ctaSub: String
-    let ffmpegTitle: String
+    let free: String
+    let bio: String
 }
 
 let copies: [String: Copy] = [
     "ru": Copy(
-        lines: [
-            "Хватит искать конвертеры.",
-            "RenameConvert меняет формат файла, когда вы просто меняете расширение в Finder.",
-            "Картинки, видео, звук, документы, данные и архивы.",
-            "Видео в MP4 или GIF, звук из видео в MP3, документ Word в PDF.",
-            "Встроенный FFmpeg понимает даже WebP, MKV, AVI и OGG.",
-            "Правила решают, что делать: спросить, конвертировать сразу или пропустить.",
-            "Перед конвертацией можно выбрать кодек, разрешение и частоту кадров.",
-            "Оригинал уходит в Корзину, а из истории его можно вернуть одним нажатием.",
-            "Всё работает локально, на двадцати трёх языках, и обновляется само.",
-            "RenameConvert. Скачайте на GitHub.",
+        phrases: [
+            ["Хватит гуглить онлайн-конвертеры."],
+            ["Просто переименуй файл в Finder — например, HEIC в JPG.", "Готово, это уже настоящий JPG."],
+            ["Видео, музыка, документы и архивы — точно так же."],
+            ["Внутри FFmpeg, так что MKV, WebP и OGG — тоже не проблема."],
+            ["Для тяжёлого видео приложение сначала спросит и даст выбрать качество."],
+            ["Передумал? Оригинал вернётся из истории в один клик."],
+            ["Всё работает прямо на Маке, без интернета, на двадцати трёх языках."],
+            ["RenameConvert. Бесплатно — ссылка в профиле."],
         ],
-        hook: "Переименуй —\nи файл\nсконвертирован",
-        hookSub: "RenameConvert для macOS",
-        categories: [("photo", "Картинки", "heic → jpg"), ("film", "Видео", "mov → mp4"),
-                     ("waveform", "Аудио", "wav → mp3"), ("doc.text", "Документы", "docx → pdf"),
-                     ("curlybraces", "Данные", "json → plist"), ("archivebox", "Архивы", "zip → 7z")],
-        features: [("lock.fill", "Локально — файлы никуда не уходят"), ("globe", "23 языка"),
-                   ("arrow.down.circle.fill", "Обновляется само")],
-        ctaSub: "macOS 15+ · Apple Silicon и Intel",
-        ffmpegTitle: "Встроенный FFmpeg"),
+        hook: ["Онлайн-", "конвертеры?"],
+        folder: "Загрузки",
+        dialog: { "Изменить расширение с «.\($0)» на «.\($1)»?" },
+        keep: { "Оставить .\($0)" },
+        use: { "Использовать .\($0)" },
+        convertedTitle: "Сконвертировано",
+        restored: "Оригинал возвращён",
+        ffmpeg: "FFmpeg внутри",
+        features: [("wifi.slash", "Без интернета"), ("globe", "23 языка"), ("arrow.down.circle.fill", "Обновляется само")],
+        free: "Бесплатно",
+        bio: "ссылка в профиле"),
     "en": Copy(
-        lines: [
-            "Stop hunting for file converters.",
-            "RenameConvert changes a file's format when you simply change its extension in Finder.",
-            "Images, video, audio, documents, data, and archives.",
-            "Video to MP4 or GIF, audio from video to MP3, a Word document to PDF.",
-            "The built-in FFmpeg even handles WebP, MKV, AVI, and OGG.",
-            "Rules decide what happens: ask first, convert right away, or skip.",
-            "Before converting, pick the codec, resolution, and frame rate.",
-            "The original goes to the Trash, and you can restore it from History in one click.",
-            "Everything runs locally, in twenty-three languages, and updates itself.",
-            "RenameConvert. Get it on GitHub.",
+        phrases: [
+            ["Stop googling online file converters."],
+            ["Just rename a file in Finder — say, HEIC to JPG.", "Done. It's a real JPG now."],
+            ["Video, music, documents, and archives work the same way."],
+            ["There's FFmpeg inside, so MKV, WebP, and OGG are no problem."],
+            ["For big videos, it asks first and lets you pick the quality."],
+            ["Changed your mind? Get the original back from History in one click."],
+            ["It all runs right on your Mac — offline, in twenty-three languages."],
+            ["RenameConvert. It's free — link in bio."],
         ],
-        hook: "Rename it.\nIt's\nconverted.",
-        hookSub: "RenameConvert for macOS",
-        categories: [("photo", "Images", "heic → jpg"), ("film", "Video", "mov → mp4"),
-                     ("waveform", "Audio", "wav → mp3"), ("doc.text", "Documents", "docx → pdf"),
-                     ("curlybraces", "Data", "json → plist"), ("archivebox", "Archives", "zip → 7z")],
-        features: [("lock.fill", "Local — files never leave your Mac"), ("globe", "23 languages"),
-                   ("arrow.down.circle.fill", "Updates itself")],
-        ctaSub: "macOS 15+ · Apple Silicon & Intel",
-        ffmpegTitle: "Built-in FFmpeg"),
+        hook: ["Online", "converters?"],
+        folder: "Downloads",
+        dialog: { "Are you sure you want to change the extension from “.\($0)” to “.\($1)”?" },
+        keep: { "Keep .\($0)" },
+        use: { "Use .\($0)" },
+        convertedTitle: "Converted",
+        restored: "Original restored",
+        ffmpeg: "FFmpeg inside",
+        features: [("wifi.slash", "Works offline"), ("globe", "23 languages"), ("arrow.down.circle.fill", "Updates itself")],
+        free: "Free",
+        bio: "link in bio"),
 ]
 
-// MARK: - Вспомогательное
+/// Минимальная длительность сцен (сек), чтобы успела анимация.
+let minDurations: [Double] = [1.7, 4.3, 3.0, 2.6, 3.8, 3.2, 2.8, 2.6]
+/// Фраза не начнётся раньше этого момента сцены (сцена, фраза) → сек: «Готово» — ровно после клика.
+let minPhraseStart: [Int: [Int: Double]] = [1: [1: 2.75]]
 
-func ease(_ x: Double) -> Double { let c = min(max(x, 0), 1); return 1 - pow(1 - c, 3) }
-func spring(_ x: Double) -> Double {
-    let c = min(max(x, 0), 1)
-    return 1 - exp(-6 * c) * cos(10 * c) * (1 - c * 0.2)
+// MARK: - Таймлайн
+
+struct Phrase { let scene: Int; let text: String; let start: Double; let duration: Double }
+
+struct Timeline {
+    let sceneStarts: [Double]
+    let sceneDurations: [Double]
+    let phrases: [Phrase]
+    var total: Double { sceneStarts.last! + sceneDurations.last! }
+
+    init(copy: Copy, durations: [Double]) {
+        var starts: [Double] = [], lengths: [Double] = [], phrases: [Phrase] = []
+        var t = 0.0, k = 0
+        for (scene, texts) in copy.phrases.enumerated() {
+            var local = prePad
+            for (i, text) in texts.enumerated() {
+                local = max(local, minPhraseStart[scene]?[i] ?? 0)
+                phrases.append(Phrase(scene: scene, text: text, start: t + local, duration: durations[k]))
+                local += durations[k] + gap
+                k += 1
+            }
+            let length = max(minDurations[scene], local - gap + postPad)
+            starts.append(t)
+            lengths.append(length)
+            t += length
+        }
+        sceneStarts = starts
+        sceneDurations = lengths
+        self.phrases = phrases
+    }
+
+    func localPhraseStart(scene: Int, index: Int) -> Double {
+        let list = phrases.filter { $0.scene == scene }
+        return index < list.count ? list[index].start - sceneStarts[scene] : 0
+    }
 }
-func appear(_ t: Double, at start: Double, length: Double = 0.45) -> Double { ease((t - start) / length) }
 
-let accent = Color(red: 0.45, green: 0.36, blue: 1.0)
-func icon(_ ext: String, size: CGFloat = 1024) -> NSImage {
+// MARK: - Анимация
+
+func clamp(_ x: Double) -> Double { min(max(x, 0), 1) }
+func easeOut(_ x: Double) -> Double { 1 - pow(1 - clamp(x), 3) }
+func easeInOut(_ x: Double) -> Double { let c = clamp(x); return c < 0.5 ? 4 * c * c * c : 1 - pow(-2 * c + 2, 3) / 2 }
+func spring(_ x: Double) -> Double { let c = clamp(x); return 1 - exp(-7 * c) * cos(11 * c) * (1 - c) }
+func appear(_ t: Double, _ start: Double, _ length: Double = 0.35) -> Double { easeOut((t - start) / length) }
+
+/// Траектория курсора по ключевым точкам.
+struct Path2D {
+    let keys: [(Double, CGPoint)]
+    func at(_ t: Double) -> CGPoint {
+        guard t > keys[0].0 else { return keys[0].1 }
+        for i in 1..<keys.count where t <= keys[i].0 {
+            let a = keys[i - 1], b = keys[i]
+            let p = easeInOut((t - a.0) / (b.0 - a.0))
+            return CGPoint(x: a.1.x + (b.1.x - a.1.x) * p, y: a.1.y + (b.1.y - a.1.y) * p)
+        }
+        return keys.last!.1
+    }
+}
+
+let accent = Color(red: 0.47, green: 0.38, blue: 1.0)
+let highlight = Color(red: 1.0, green: 0.84, blue: 0.25)
+
+func icon(_ ext: String) -> NSImage {
     let img = NSWorkspace.shared.icon(for: UTType(filenameExtension: ext) ?? .data)
-    img.size = NSSize(width: size, height: size)
+    img.size = NSSize(width: 512, height: 512)
     return img
 }
 
-struct Background: View {
+// MARK: - Общие элементы
+
+struct Wallpaper: View {
     let t: Double
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(red: 0.07, green: 0.09, blue: 0.25), Color(red: 0.22, green: 0.10, blue: 0.48)],
-                           startPoint: .top, endPoint: .bottom)
-            Circle().fill(Color(red: 0.33, green: 0.62, blue: 1).opacity(0.35)).frame(width: 900).blur(radius: 160)
-                .offset(x: -300 + 80 * sin(t / 3), y: -600 + 60 * cos(t / 4))
-            Circle().fill(Color(red: 0.6, green: 0.3, blue: 1).opacity(0.35)).frame(width: 800).blur(radius: 160)
-                .offset(x: 320 + 70 * cos(t / 3.5), y: 500 + 80 * sin(t / 5))
+            LinearGradient(colors: [Color(red: 0.05, green: 0.10, blue: 0.30), Color(red: 0.27, green: 0.11, blue: 0.52)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            Circle().fill(Color(red: 0.25, green: 0.6, blue: 1).opacity(0.45)).frame(width: 1000).blur(radius: 180)
+                .offset(x: -320 + 90 * sin(t / 2.5), y: -650 + 70 * cos(t / 3))
+            Circle().fill(Color(red: 0.75, green: 0.3, blue: 0.95).opacity(0.4)).frame(width: 900).blur(radius: 180)
+                .offset(x: 330 + 80 * cos(t / 2.8), y: 520 + 90 * sin(t / 3.6))
         }
     }
 }
 
-struct Caption: View {
-    let text: String
-    let progress: Double
-    var body: some View {
-        Text(text)
-            .font(.system(size: 50, weight: .semibold))
-            .foregroundStyle(.white)
-            .multilineTextAlignment(.center)
-            .lineSpacing(6)
-            .padding(.horizontal, 44).padding(.vertical, 30)
-            .background(RoundedRectangle(cornerRadius: 36).fill(.black.opacity(0.42)))
-            .frame(maxWidth: 940)
-            .opacity(ease(progress / 0.12))
+struct CursorShape: Shape {
+    func path(in r: CGRect) -> Path {
+        let pts: [(CGFloat, CGFloat)] = [(0, 0), (0, 0.80), (0.22, 0.62), (0.37, 0.95), (0.52, 0.88), (0.38, 0.57), (0.66, 0.57)]
+        var p = Path()
+        p.addLines(pts.map { CGPoint(x: r.minX + $0.0 * r.width, y: r.minY + $0.1 * r.height) })
+        p.closeSubpath()
+        return p
     }
 }
 
-struct Card<Content: View>: View {
+/// Курсор macOS с анимацией клика (нажатие + расходящийся круг).
+struct Cursor: View {
+    let position: CGPoint
+    let clicks: [Double]
+    let t: Double
+    var body: some View {
+        let since = clicks.map { t - $0 }.filter { $0 >= 0 }.min() ?? 99
+        let pressed = since < 0.12
+        ZStack(alignment: .topLeading) {
+            if since < 0.45 {
+                Circle().stroke(.white.opacity(0.9 * (1 - since / 0.45)), lineWidth: 5)
+                    .frame(width: 30 + 120 * since / 0.45, height: 30 + 120 * since / 0.45)
+                    .position(x: 0, y: 0)
+            }
+            CursorShape().fill(.black)
+                .overlay(CursorShape().stroke(.white, style: StrokeStyle(lineWidth: 3.5, lineJoin: .round)))
+                .frame(width: 44, height: 64)
+                .shadow(color: .black.opacity(0.4), radius: 6, y: 3)
+                .scaleEffect(pressed ? 0.82 : 1, anchor: .topLeading)
+        }
+        .frame(width: 1, height: 1, alignment: .topLeading)
+        .position(position)
+    }
+}
+
+/// Окно в стиле macOS с заголовком.
+struct Window<Content: View>: View {
+    let title: String
+    let size: CGSize
     @ViewBuilder let content: Content
     var body: some View {
-        content
-            .background(RoundedRectangle(cornerRadius: 44).fill(.white))
-            .shadow(color: .black.opacity(0.35), radius: 40, y: 20)
+        VStack(spacing: 0) {
+            ZStack {
+                HStack(spacing: 14) {
+                    ForEach([Color(red: 1, green: 0.37, blue: 0.34), Color(red: 1, green: 0.74, blue: 0.18), Color(red: 0.16, green: 0.8, blue: 0.25)],
+                            id: \.self) { Circle().fill($0).frame(width: 22) }
+                    Spacer()
+                }
+                Text(title).font(.system(size: 30, weight: .semibold)).foregroundStyle(.black.opacity(0.75))
+            }
+            .padding(.horizontal, 26)
+            .frame(height: 76)
+            .background(Color(white: 0.955))
+            Divider()
+            content.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(width: size.width, height: size.height)
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 26))
+        .shadow(color: .black.opacity(0.45), radius: 50, y: 26)
     }
 }
 
-/// Скриншот в рамке окна с лёгким наездом камеры.
-struct Screenshot: View {
-    let image: NSImage
-    let t: Double, d: Double
-    var width: CGFloat = 960
+/// Фото-миниатюра (нарисованный пейзаж), чтобы файл выглядел живым.
+struct PhotoThumb: View {
     var body: some View {
-        let s = 0.96 + 0.06 * (t / d)
-        VStack(spacing: 0) {
-            HStack(spacing: 14) {
-                ForEach([Color.red, .yellow, .green], id: \.self) { Circle().fill($0.opacity(0.85)).frame(width: 22) }
-                Spacer()
-            }
-            .padding(.horizontal, 28).frame(height: 64).background(Color(white: 0.93))
-            Image(nsImage: image).resizable().aspectRatio(contentMode: .fit)
+        ZStack(alignment: .bottom) {
+            LinearGradient(colors: [Color(red: 1, green: 0.62, blue: 0.35), Color(red: 0.95, green: 0.35, blue: 0.5)], startPoint: .top, endPoint: .bottom)
+            Circle().fill(Color(red: 1, green: 0.93, blue: 0.6)).frame(width: 60).offset(x: 30, y: -80)
+            Path { p in p.move(to: .init(x: 0, y: 150)); p.addLine(to: .init(x: 70, y: 70)); p.addLine(to: .init(x: 120, y: 120))
+                p.addLine(to: .init(x: 165, y: 60)); p.addLine(to: .init(x: 230, y: 150)); p.closeSubpath() }
+                .fill(Color(red: 0.28, green: 0.18, blue: 0.42))
         }
-        .frame(width: width)
-        .background(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 30))
-        .shadow(color: .black.opacity(0.4), radius: 50, y: 24)
-        .scaleEffect(s * (0.85 + 0.15 * spring(t / 0.7)))
-        .opacity(appear(t, at: 0))
+        .frame(width: 230, height: 150)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.white, lineWidth: 6))
+        .shadow(color: .black.opacity(0.25), radius: 6, y: 3)
+    }
+}
+
+struct Toast: View {
+    let text: String
+    var color: Color = .green
+    var body: some View {
+        Label(text, systemImage: "checkmark.circle.fill")
+            .font(.system(size: 42, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 34).padding(.vertical, 18)
+            .background(Capsule().fill(color))
+            .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
+    }
+}
+
+// MARK: - Субтитры по словам
+
+struct Captions: View {
+    let phrase: Phrase?
+    let t: Double
+    var body: some View {
+        if let phrase {
+            let words = phrase.text.split(separator: " ").map(String.init)
+            let total = Double(words.reduce(0) { $0 + $1.count + 1 })
+            // Время слова — пропорционально числу букв до него (речь примерно равномерна).
+            var acc = 0.0
+            let starts: [Double] = words.map { w in defer { acc += Double(w.count + 1) }; return phrase.start + phrase.duration * acc / total }
+            let local = t - phrase.start
+            FlowText(words: words, starts: starts, t: t)
+                .padding(.horizontal, 40).padding(.vertical, 28)
+                .background(RoundedRectangle(cornerRadius: 34).fill(.black.opacity(0.5)))
+                .opacity(min(easeOut(local / 0.15), easeOut((phrase.start + phrase.duration + 0.35 - t) / 0.2)))
+                .frame(width: 980)
+        }
+    }
+}
+
+struct FlowText: View {
+    let words: [String], starts: [Double], t: Double
+    var body: some View {
+        // Раскладка по строкам до ~24 символов — крупно, как в Reels.
+        let lines = Self.lines(words)
+        VStack(spacing: 6) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                HStack(spacing: 14) {
+                    ForEach(line, id: \.self) { i in
+                        let since = t - starts[i]
+                        let current = since >= 0 && (i + 1 == words.count || t < starts[i + 1])
+                        Text(words[i])
+                            .font(.system(size: 58, weight: .heavy))
+                            .foregroundStyle(current ? highlight : .white)
+                            .opacity(since >= -0.02 ? 1 : 0.42)
+                            .scaleEffect(current ? 1.06 + 0.08 * (1 - easeOut(since / 0.18)) : 1)
+                    }
+                }
+            }
+        }
+    }
+
+    static func lines(_ words: [String]) -> [[Int]] {
+        var result: [[Int]] = [[]], length = 0
+        for (i, w) in words.enumerated() {
+            if length + w.count > 24, !result[result.count - 1].isEmpty { result.append([]); length = 0 }
+            result[result.count - 1].append(i)
+            length += w.count + 1
+        }
+        return result
     }
 }
 
 // MARK: - Сцены
 
-struct SceneView: View {
-    let index: Int, t: Double, d: Double
+struct SceneContent: View {
+    let scene: Int, t: Double, d: Double
     let copy: Copy
+    let timeline: Timeline
     let shots: [String: NSImage]
     let appIcon: NSImage
 
     var body: some View {
         ZStack {
-            content.frame(width: W, height: 1350).offset(y: -170)
-            VStack {
-                Spacer()
-                Caption(text: copy.lines[index], progress: t / d)
-                    .padding(.bottom, 330)
+            switch scene {
+            case 0: hook
+            case 1: renameDemo
+            case 2: montage
+            case 3: ffmpeg
+            case 4: askDemo
+            case 5: historyDemo
+            case 6: features
+            default: cta
             }
         }
         .frame(width: W, height: H)
-        // Мягкая смена сцен.
-        .opacity(min(ease(t / 0.25), ease((d - t) / 0.2)))
     }
 
-    @ViewBuilder var content: some View {
-        switch index {
-        case 0: hook
-        case 1: finderDemo
-        case 2: categories
-        case 3: conversions
-        case 4: ffmpeg
-        case 5: Screenshot(image: shots["rules"]!, t: t, d: d)
-        case 6: Screenshot(image: shots["ask"]!, t: t, d: d, width: 760)
-        case 7: Screenshot(image: shots["history"]!, t: t, d: d)
-        case 8: features
-        default: cta
-        }
-    }
-
+    // 0. «Онлайн-конвертеры?» — зачёркиваются.
     var hook: some View {
-        VStack(spacing: 50) {
-            Image(nsImage: appIcon).resizable().frame(width: 360, height: 360)
-                .scaleEffect(0.6 + 0.4 * spring(t / 0.8))
-                .rotationEffect(.degrees(-8 * (1 - ease(t / 0.8))))
-            Text(copy.hook)
-                .font(.system(size: 108, weight: .heavy))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white)
-                .opacity(appear(t, at: 0.25))
-                .offset(y: 40 * (1 - appear(t, at: 0.25)))
-            Text(copy.hookSub).font(.system(size: 44, weight: .medium)).foregroundStyle(.white.opacity(0.75))
-                .opacity(appear(t, at: 0.6))
+        VStack(spacing: 10) {
+            ForEach(Array(copy.hook.enumerated()), id: \.offset) { i, line in
+                Text(line).font(.system(size: 132, weight: .black)).foregroundStyle(.white)
+                    .scaleEffect(0.6 + 0.4 * spring((t - 0.12 * Double(i)) / 0.5))
+                    .opacity(appear(t, 0.12 * Double(i), 0.2))
+            }
         }
+        .overlay {
+            Capsule().fill(Color(red: 1, green: 0.27, blue: 0.3))
+                .frame(width: 780 * easeOut((t - 0.55) / 0.3), height: 18)
+                .rotationEffect(.degrees(-8))
+                .frame(width: 780, alignment: .leading)
+        }
+        .position(x: W / 2, y: 760)
     }
 
-    /// Имитация переименования в Finder: photo.HEIC → photo.jpg.
-    var finderDemo: some View {
-        let typed = ["photo.HEIC", "photo.HEIC", "photo.", "photo.j", "photo.jp", "photo.jpg"]
-        let step = min(typed.count - 1, max(0, Int((t - 0.6) / 0.3)))
-        let name = typed[step]
-        let selecting = t > 0.6 && step < 2
-        let done = t > 0.6 + 0.3 * Double(typed.count) + 0.2
-        let doneP = ease((t - (0.6 + 0.3 * Double(typed.count) + 0.2)) / 0.4)
-        return Card {
+    // 1. Переименование в Finder: курсор, ввод, диалог, готово.
+    var renameDemo: some View {
+        let done = timeline.localPhraseStart(scene: 1, index: 1)
+        let origin = CGPoint(x: 60, y: 260)                     // левый верх окна
+        let photo = CGPoint(x: origin.x + 165, y: origin.y + 76 + 175)
+        let label = CGPoint(x: photo.x, y: photo.y + 135)
+        // Кнопка «Использовать» в диалоге (измерено по кадру).
+        let useButton = CGPoint(x: 684, y: 870)
+        let cursor = Path2D(keys: [
+            (0.0, CGPoint(x: 900, y: 1300)), (0.5, CGPoint(x: label.x + 30, y: label.y - 5)),
+            (1.6, CGPoint(x: label.x + 30, y: label.y - 5)), (done - 0.45, CGPoint(x: useButton.x - 20, y: useButton.y - 8)),
+            (done + 0.6, CGPoint(x: useButton.x + 90, y: useButton.y + 140)),
+        ])
+        let clickName = 0.55, clickUse = done - 0.3
+        let typed = ["IMG_2041.HEIC", "IMG_2041.", "IMG_2041.j", "IMG_2041.jp", "IMG_2041.jpg"]
+        let step = min(typed.count - 1, max(0, Int((t - 0.85) / 0.16)))
+        let editing = t > clickName && t < done - 1.05
+        let selecting = editing && t < 0.85
+        let dialog = clamp((t - (done - 1.05)) / 0.25) * (1 - clamp((t - clickUse - 0.05) / 0.18))
+        let finished = t > done
+
+        let others: [(String, String)] = [("clip", "mov"), ("song", "wav"), ("report", "docx"), ("backup", "zip"), ("data", "json")]
+        return ZStack(alignment: .topLeading) {
+            Window(title: copy.folder, size: CGSize(width: 960, height: 860)) {
+                ZStack(alignment: .topLeading) {
+                    // Сетка файлов: первый — фото, остальные — для антуража.
+                    ForEach(0..<6, id: \.self) { i in
+                        let col = i % 3, row = i / 3
+                        VStack(spacing: 18) {
+                            Group {
+                                if i == 0 {
+                                    PhotoThumb()
+                                        .overlay(alignment: .bottomTrailing) {
+                                            Text(finished ? "JPG" : "HEIC").font(.system(size: 24, weight: .heavy))
+                                                .foregroundStyle(.white).padding(.horizontal, 10).padding(.vertical, 4)
+                                                .background(Capsule().fill(finished ? .green : .gray)).offset(x: 10, y: 12)
+                                        }
+                                        .scaleEffect(finished ? 1 + 0.08 * (1 - easeOut((t - done) / 0.4)) : 1)
+                                } else {
+                                    Image(nsImage: icon(others[i - 1].1)).resizable().frame(width: 190, height: 190)
+                                }
+                            }
+                            .frame(height: 190)
+                            if i == 0 {
+                                nameField(typed: typed[step], editing: editing, selecting: selecting, finished: finished)
+                            } else {
+                                Text("\(others[i - 1].0).\(others[i - 1].1)").font(.system(size: 30)).foregroundStyle(.black.opacity(0.8))
+                            }
+                        }
+                        .frame(width: 310)
+                        .position(x: 165 + 315 * CGFloat(col), y: 175 + 340 * CGFloat(row) + 60)
+                    }
+                    // Диалог Finder о смене расширения.
+                    if dialog > 0 {
+                        Color.black.opacity(0.12 * dialog)
+                        VStack(spacing: 26) {
+                            Image(nsImage: appIconFinder()).resizable().frame(width: 96, height: 96)
+                            Text(copy.dialog("HEIC", "jpg")).font(.system(size: 31, weight: .bold)).multilineTextAlignment(.center)
+                                .foregroundStyle(.black)
+                            HStack(spacing: 18) {
+                                Text(copy.keep("HEIC")).font(.system(size: 28, weight: .medium)).foregroundStyle(.black)
+                                    .frame(width: 270, height: 64).background(RoundedRectangle(cornerRadius: 14).fill(Color(white: 0.9)))
+                                Text(copy.use("jpg")).font(.system(size: 28, weight: .semibold)).foregroundStyle(.white)
+                                    .frame(width: 270, height: 64).background(RoundedRectangle(cornerRadius: 14).fill(Color.accentColor))
+                            }
+                        }
+                        .padding(36)
+                        .frame(width: 640)
+                        .background(RoundedRectangle(cornerRadius: 28).fill(Color(white: 0.975)))
+                        .shadow(color: .black.opacity(0.35), radius: 30, y: 14)
+                        .scaleEffect(0.85 + 0.15 * spring(dialog))
+                        .opacity(dialog)
+                        .position(x: 480, y: 420)
+                    }
+                }
+            }
+            .position(x: W / 2, y: origin.y + 430)
+            .scaleEffect(0.92 + 0.08 * spring(t / 0.6))
+
+            if finished {
+                Toast(text: "HEIC → JPG")
+                    .scaleEffect(spring((t - done) / 0.5))
+                    .position(x: W / 2, y: 1210)
+            }
+            Cursor(position: cursor.at(t), clicks: [clickName, clickUse], t: t)
+        }
+        .frame(width: W, height: H)
+    }
+
+    func appIconFinder() -> NSImage {
+        let img = NSWorkspace.shared.icon(forFile: "/System/Library/CoreServices/Finder.app")
+        img.size = NSSize(width: 256, height: 256)
+        return img
+    }
+
+    @ViewBuilder func nameField(typed: String, editing: Bool, selecting: Bool, finished: Bool) -> some View {
+        let font = Font.system(size: 30, weight: .medium)
+        HStack(spacing: 0) {
+            if selecting {
+                Text("IMG_2041.").font(font).foregroundStyle(.black)
+                Text("HEIC").font(font).foregroundStyle(.white).background(Color.accentColor)
+            } else {
+                Text(finished ? "IMG_2041.jpg" : typed).font(font).foregroundStyle(.black)
+                if editing { Rectangle().fill(.black).frame(width: 3, height: 34) }
+            }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 7).stroke(editing ? Color.accentColor : .clear, lineWidth: 4))
+    }
+
+    // 2. Быстрый монтаж: расширения «прокручиваются» как барабан.
+    var montage: some View {
+        let rows = [("clip", "mov", "mp4"), ("clip", "mov", "gif"), ("song", "wav", "mp3"), ("report", "docx", "pdf"), ("photos", "zip", "7z")]
+        return Window(title: copy.folder, size: CGSize(width: 960, height: 880)) {
             VStack(spacing: 0) {
-                HStack(spacing: 14) {
-                    ForEach([Color.red, .yellow, .green], id: \.self) { Circle().fill($0.opacity(0.85)).frame(width: 22) }
-                    Spacer()
-                    Text("Finder").font(.system(size: 30, weight: .semibold)).foregroundStyle(.secondary)
-                    Spacer().frame(width: 90)
-                }
-                .padding(.horizontal, 32).frame(height: 76).background(Color(white: 0.95))
-                VStack(spacing: 34) {
-                    ZStack(alignment: .bottomTrailing) {
-                        Image(nsImage: icon(done ? "jpg" : "heic")).resizable().frame(width: 380, height: 380)
-                        if done {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 110)).foregroundStyle(.white, .green)
-                                .scaleEffect(spring(doneP)).offset(x: 20, y: 10)
+                ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
+                    let at = 0.25 + 0.42 * Double(i)
+                    let p = easeInOut((t - at) / 0.3)
+                    HStack(spacing: 22) {
+                        Image(nsImage: icon(p > 0.5 ? r.2 : r.1)).resizable().frame(width: 104, height: 104)
+                        HStack(spacing: 0) {
+                            Text("\(r.0).").foregroundStyle(.black)
+                            ZStack(alignment: .leading) {
+                                Text(r.1).foregroundStyle(.black).offset(y: -50 * p).opacity(1 - p)
+                                Text(r.2).foregroundStyle(accent).offset(y: 50 * (1 - p)).opacity(p)
+                            }
+                            .clipped()
                         }
+                        .font(.system(size: 46, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "checkmark.circle.fill").font(.system(size: 54)).foregroundStyle(.green)
+                            .scaleEffect(spring((t - at - 0.25) / 0.4))
                     }
-                    HStack(spacing: 0) {
-                        if selecting {
-                            Text("photo.").foregroundStyle(.black)
-                            Text("HEIC").foregroundStyle(.white).background(Color.accentColor.opacity(0.9))
-                        } else {
-                            Text(name).foregroundStyle(.black)
-                            if !done && t > 0.6 { Rectangle().fill(.black).frame(width: 3, height: 52).opacity(sin(t * 12) > 0 ? 1 : 0) }
-                        }
-                    }
-                    .font(.system(size: 54, weight: .medium))
-                    .padding(.horizontal, 24).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 10).stroke(t > 0.6 && !done ? Color.accentColor : .clear, lineWidth: 4))
-                    Text("HEIC → JPG")
-                        .font(.system(size: 46, weight: .bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 34).padding(.vertical, 14)
-                        .background(Capsule().fill(.green))
-                        .opacity(doneP).scaleEffect(0.8 + 0.2 * spring(doneP))
+                    .padding(.horizontal, 40)
+                    .frame(height: 158)
+                    .background(i % 2 == 1 ? Color(white: 0.965) : .white)
                 }
-                .padding(.vertical, 60)
-            }
-            .frame(width: 900)
-        }
-        .scaleEffect(0.9 + 0.1 * spring(t / 0.6))
-    }
-
-    var categories: some View {
-        LazyVGrid(columns: [GridItem(.fixed(440), spacing: 36), GridItem(.fixed(440), spacing: 36)], spacing: 36) {
-            ForEach(Array(copy.categories.enumerated()), id: \.offset) { i, item in
-                let p = spring((t - 0.15 * Double(i)) / 0.6)
-                VStack(alignment: .leading, spacing: 14) {
-                    Image(systemName: item.0).font(.system(size: 64, weight: .semibold)).foregroundStyle(accent)
-                    Text(item.1).font(.system(size: 50, weight: .bold)).foregroundStyle(.black)
-                    Text(item.2).font(.system(size: 36, weight: .medium, design: .monospaced)).foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(40)
-                .background(RoundedRectangle(cornerRadius: 36).fill(.white))
-                .shadow(color: .black.opacity(0.25), radius: 24, y: 12)
-                .scaleEffect(max(0.01, p)).opacity(min(1, max(0, p)))
             }
         }
+        .scaleEffect(0.95 + 0.05 * spring(t / 0.5))
+        .position(x: W / 2, y: 690)
     }
 
-    var conversions: some View {
-        let rows = [("clip", "mov", "mp4"), ("clip", "mov", "gif"), ("interview", "mkv", "mp3"), ("report", "docx", "pdf")]
-        return VStack(spacing: 30) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
-                let start = 0.25 + 0.55 * Double(i)
-                let p = ease((t - start) / 0.9)
-                HStack(spacing: 18) {
-                    VStack(spacing: 6) {
-                        Image(nsImage: icon(r.1)).resizable().frame(width: 96, height: 96)
-                        Text("\(r.0).\(r.1)").font(.system(size: 30, weight: .semibold)).foregroundStyle(.black).lineLimit(1)
-                    }
-                    .frame(width: 250)
-                    Image(systemName: "arrow.right").font(.system(size: 44, weight: .bold)).foregroundStyle(accent)
-                    VStack(spacing: 6) {
-                        Image(nsImage: icon(r.2)).resizable().frame(width: 96, height: 96)
-                        Text("\(r.0).\(r.2)").font(.system(size: 30, weight: .bold)).foregroundStyle(.black).lineLimit(1)
-                    }
-                    .frame(width: 250)
-                    .opacity(p >= 1 ? 1 : 0.3)
-                    Spacer(minLength: 0)
-                    ZStack {
-                        Circle().stroke(Color(white: 0.88), lineWidth: 10)
-                        Circle().trim(from: 0, to: p).stroke(p >= 1 ? Color.green : accent, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                        if p >= 1 { Image(systemName: "checkmark").font(.system(size: 40, weight: .heavy)).foregroundStyle(.green) }
-                    }
-                    .frame(width: 84, height: 84)
-                }
-                .padding(.horizontal, 36).padding(.vertical, 26)
-                .frame(width: 960)
-                .background(RoundedRectangle(cornerRadius: 34).fill(.white))
-                .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
-                .opacity(appear(t, at: start - 0.2, length: 0.3))
-                .offset(x: 120 * (1 - appear(t, at: start - 0.2, length: 0.3)))
-            }
-        }
-    }
-
+    // 3. FFmpeg и форматы.
     var ffmpeg: some View {
-        let chips = ["WebP", "MP3", "MKV", "AVI", "WebM", "OGG", "OPUS", "FLV", "WMA", "MPEG-TS"]
-        return VStack(spacing: 60) {
-            Text(copy.ffmpegTitle).font(.system(size: 92, weight: .heavy)).foregroundStyle(.white)
-                .scaleEffect(0.8 + 0.2 * spring(t / 0.6))
-            FlowChips(chips: chips, t: t)
-        }
-    }
-
-    var features: some View {
-        VStack(alignment: .leading, spacing: 44) {
-            ForEach(Array(copy.features.enumerated()), id: \.offset) { i, f in
-                let p = appear(t, at: 0.2 + 0.5 * Double(i))
-                HStack(spacing: 34) {
-                    Image(systemName: f.0).font(.system(size: 76, weight: .semibold)).foregroundStyle(.white)
-                        .frame(width: 140, height: 140).background(Circle().fill(accent))
-                    Text(f.1).font(.system(size: 54, weight: .bold)).foregroundStyle(.white)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(width: 900, alignment: .leading)
-                .opacity(p).offset(x: -80 * (1 - p))
+        let chips = ["MKV", "WebP", "OGG", "AVI", "MP3", "WebM", "OPUS", "FLV", "WMA", "MPEG-TS", "FLAC", "AVIF"]
+        return VStack(spacing: 56) {
+            HStack(spacing: 22) {
+                Image(systemName: "shippingbox.fill").font(.system(size: 80)).foregroundStyle(highlight)
+                Text(copy.ffmpeg).font(.system(size: 92, weight: .black)).foregroundStyle(.white)
             }
-        }
-    }
-
-    var cta: some View {
-        VStack(spacing: 44) {
-            Image(nsImage: appIcon).resizable().frame(width: 400, height: 400)
-                .scaleEffect(0.7 + 0.3 * spring(t / 0.8))
-            Text("RenameConvert").font(.system(size: 104, weight: .heavy)).foregroundStyle(.white)
-            HStack(spacing: 18) {
-                Image(systemName: "arrow.down.circle.fill").font(.system(size: 52))
-                Text("github.com/Kohinor46/RenameConvert").font(.system(size: 40, weight: .semibold))
-            }
-            .foregroundStyle(.black)
-            .padding(.horizontal, 40).padding(.vertical, 24)
-            .background(Capsule().fill(.white))
-            .opacity(appear(t, at: 0.4))
-            Text(copy.ctaSub).font(.system(size: 40, weight: .medium)).foregroundStyle(.white.opacity(0.8))
-                .opacity(appear(t, at: 0.7))
-        }
-    }
-}
-
-struct FlowChips: View {
-    let chips: [String]
-    let t: Double
-    var body: some View {
-        VStack(spacing: 28) {
-            ForEach(0..<(chips.count + 2) / 3, id: \.self) { row in
-                HStack(spacing: 28) {
-                    ForEach(row * 3..<min(chips.count, row * 3 + 3), id: \.self) { i in
-                        let p = spring((t - 0.3 - 0.12 * Double(i)) / 0.5)
-                        Text(chips[i]).font(.system(size: 52, weight: .bold, design: .rounded))
-                            .foregroundStyle(.black)
-                            .padding(.horizontal, 38).padding(.vertical, 22)
-                            .background(Capsule().fill(.white))
-                            .scaleEffect(max(0.01, p)).opacity(min(1, max(0, p)))
+            .scaleEffect(0.7 + 0.3 * spring(t / 0.5))
+            VStack(spacing: 26) {
+                ForEach(0..<4, id: \.self) { row in
+                    HStack(spacing: 24) {
+                        ForEach(row * 3..<row * 3 + 3, id: \.self) { i in
+                            let p = spring((t - 0.25 - 0.07 * Double(i)) / 0.45)
+                            Text(chips[i]).font(.system(size: 54, weight: .heavy, design: .rounded)).foregroundStyle(.black)
+                                .padding(.horizontal, 36).padding(.vertical, 20)
+                                .background(Capsule().fill(.white))
+                                .rotationEffect(.degrees(Double((i * 7) % 9) - 4))
+                                .scaleEffect(max(0.01, p)).opacity(clamp(p * 1.5))
+                        }
                     }
                 }
             }
         }
+        .position(x: W / 2, y: 720)
+    }
+
+    // 4. Окно-вопрос: выезжает справа, клик «Конвертировать», затем уведомление.
+    var askDemo: some View {
+        let image = shots["ask"]!
+        let size = CGSize(width: 960, height: 960 * image.size.height / image.size.width)
+        let center = CGPoint(x: W / 2, y: 140 + size.height / 2)
+        let button = CGPoint(x: center.x - size.width / 2 + 0.895 * size.width, y: center.y - size.height / 2 + 0.94 * size.height)
+        let click = max(2.0, d - 1.6)
+        let slideIn = easeOut(t / 0.45), slideOut = easeInOut((t - click - 0.1) / 0.35)
+        let cursor = Path2D(keys: [(0, CGPoint(x: 200, y: 1350)), (0.6, CGPoint(x: 300, y: 1150)),
+                                   (click - 0.1, CGPoint(x: button.x - 10, y: button.y - 6)), (click + 1, CGPoint(x: button.x - 120, y: button.y + 220))])
+        let progress = clamp((t - click - 0.2) / 0.9)
+        return ZStack {
+            menuBar(progress: t > click + 0.15 ? progress : nil)
+            Image(nsImage: image).resizable().frame(width: size.width, height: size.height)
+                .background(Color(white: 0.965))
+                .clipShape(RoundedRectangle(cornerRadius: 24))
+                .shadow(color: .black.opacity(0.45), radius: 40, y: 20)
+                .position(x: center.x + 600 * (1 - slideIn) + 700 * slideOut, y: center.y)
+            if progress >= 1 {
+                notification(title: copy.convertedTitle, body: "holiday.mov → holiday.mp4")
+                    .offset(x: 600 * (1 - easeOut((t - click - 1.15) / 0.35)))
+                    .position(x: W - 40 - 390, y: 200)
+            }
+            Cursor(position: cursor.at(t), clicks: [click], t: t)
+        }
+        .frame(width: W, height: H)
+    }
+
+    func menuBar(progress: Double?) -> some View {
+        HStack(spacing: 26) {
+            Spacer()
+            if let progress {
+                if progress < 1 {
+                    Text("\(Image(systemName: "arrow.triangle.2.circlepath")) \(Int(progress * 100))%")
+                } else {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                }
+            } else {
+                Image(systemName: "questionmark.circle")
+            }
+            Image(systemName: "wifi")
+            Image(systemName: "battery.75percent")
+            Text("9:41")
+        }
+        .font(.system(size: 30, weight: .semibold))
+        .foregroundStyle(.white)
+        .padding(.horizontal, 36)
+        .frame(width: W, height: 64)
+        .background(.black.opacity(0.25))
+        .position(x: W / 2, y: 32)
+    }
+
+    func notification(title: String, body: String) -> some View {
+        HStack(spacing: 22) {
+            Image(nsImage: appIcon).resizable().frame(width: 84, height: 84)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title).font(.system(size: 32, weight: .bold)).foregroundStyle(.black)
+                Text(body).font(.system(size: 28)).foregroundStyle(.black.opacity(0.7))
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(24)
+        .frame(width: 780)
+        .background(RoundedRectangle(cornerRadius: 28).fill(Color(white: 0.97)))
+        .shadow(color: .black.opacity(0.35), radius: 24, y: 10)
+    }
+
+    // 5. История: клик по «вернуть оригинал».
+    var historyDemo: some View {
+        let image = shots["history"]!
+        let size = CGSize(width: 960, height: 960 * image.size.height / image.size.width)
+        let center = CGPoint(x: W / 2, y: 720)
+        let undo = CGPoint(x: center.x - size.width / 2 + 0.912 * size.width, y: center.y - size.height / 2 + 0.052 * size.height)
+        let click = max(1.5, d - 1.5)
+        // Лёгкий наезд камеры по центру строки: окно почти во всю ширину кадра.
+        let zoom = 1 + 0.1 * easeInOut((t - 0.35) / max(0.4, click - 0.6))
+        let anchor = CGPoint(x: W / 2, y: undo.y)
+        let target = CGPoint(x: anchor.x + (undo.x - anchor.x) * 1.1, y: undo.y)
+        let cursor = Path2D(keys: [(0, CGPoint(x: 300, y: 1400)), (click - 0.1, CGPoint(x: target.x - 8, y: target.y - 6)),
+                                   (click + 1.2, CGPoint(x: target.x - 140, y: target.y + 260))])
+        return ZStack {
+            ZStack {
+                Window(title: "RenameConvert", size: CGSize(width: size.width, height: size.height + 76)) {
+                    Image(nsImage: image).resizable().frame(width: size.width, height: size.height)
+                }
+                .scaleEffect(0.94 + 0.06 * spring(t / 0.55))
+                .position(x: center.x, y: center.y - 38)
+            }
+            .frame(width: W, height: H)
+            // Камера наезжает на кнопку «вернуть» — она остаётся на месте, остальное увеличивается.
+            .scaleEffect(zoom, anchor: UnitPoint(x: anchor.x / W, y: anchor.y / H))
+            if t > click {
+                Toast(text: copy.restored)
+                    .scaleEffect(spring((t - click) / 0.5))
+                    .position(x: W / 2, y: center.y + size.height / 2 + 80)
+            }
+            Cursor(position: cursor.at(t), clicks: [click], t: t)
+        }
+        .frame(width: W, height: H)
+    }
+
+    // 6. Преимущества.
+    var features: some View {
+        VStack(alignment: .leading, spacing: 50) {
+            ForEach(Array(copy.features.enumerated()), id: \.offset) { i, f in
+                let p = spring((t - 0.15 - 0.3 * Double(i)) / 0.5)
+                HStack(spacing: 36) {
+                    Image(systemName: f.0).font(.system(size: 72, weight: .bold)).foregroundStyle(.white)
+                        .frame(width: 150, height: 150).background(Circle().fill(accent))
+                    Text(f.1).font(.system(size: 76, weight: .heavy)).foregroundStyle(.white)
+                }
+                .scaleEffect(max(0.01, p), anchor: .leading)
+                .opacity(clamp(p * 1.4))
+            }
+        }
+        .frame(width: 900, alignment: .leading)
+        .position(x: W / 2, y: 720)
+    }
+
+    // 7. Финал.
+    var cta: some View {
+        VStack(spacing: 40) {
+            Image(nsImage: appIcon).resizable().frame(width: 380, height: 380)
+                .scaleEffect(0.6 + 0.4 * spring(t / 0.6))
+                .rotationEffect(.degrees(-10 * (1 - easeOut(t / 0.6))))
+            Text("RenameConvert").font(.system(size: 100, weight: .black)).foregroundStyle(.white)
+            HStack(spacing: 18) {
+                Text(copy.free).font(.system(size: 46, weight: .heavy)).foregroundStyle(.black)
+                    .padding(.horizontal, 30).padding(.vertical, 14).background(Capsule().fill(highlight))
+                Text("↓ \(copy.bio)").font(.system(size: 46, weight: .bold)).foregroundStyle(.white)
+            }
+            .opacity(appear(t, 0.35))
+            Text("github.com/Kohinor46/RenameConvert").font(.system(size: 34, weight: .semibold)).foregroundStyle(.white.opacity(0.75))
+                .opacity(appear(t, 0.55))
+        }
+        .position(x: W / 2, y: 720)
     }
 }
+
+// MARK: - Кадр: фон, сцены со свайпами, субтитры
 
 struct Frame: View {
-    let scene: Int, t: Double, d: Double, global: Double
+    let t: Double
+    let timeline: Timeline
     let copy: Copy
     let shots: [String: NSImage]
     let appIcon: NSImage
+
     var body: some View {
         ZStack {
-            Background(t: global)
-            SceneView(index: scene, t: t, d: d, copy: copy, shots: shots, appIcon: appIcon)
+            Wallpaper(t: t)
+            ForEach(visibleScenes(), id: \.scene) { item in
+                SceneContent(scene: item.scene, t: max(0, t - timeline.sceneStarts[item.scene]),
+                             d: timeline.sceneDurations[item.scene], copy: copy, timeline: timeline, shots: shots, appIcon: appIcon)
+                    .offset(y: item.offset)
+                    .scaleEffect(item.scale)
+                    .blur(radius: item.blur)
+                    .opacity(item.opacity)
+            }
+            Captions(phrase: timeline.phrases.last { $0.start <= t + 0.05 && t < $0.start + $0.duration + 0.4 }, t: t)
+                .position(x: W / 2, y: 1500)
         }
         .frame(width: W, height: H)
+        .clipped()
         .environment(\.colorScheme, .light)
+    }
+
+    struct Item { let scene: Int; let offset: CGFloat; let scale: CGFloat; let blur: CGFloat; let opacity: Double }
+
+    /// Свайп вверх: уходящая сцена уезжает вверх и размывается, новая выезжает снизу.
+    func visibleScenes() -> [Item] {
+        let starts = timeline.sceneStarts
+        for k in 1..<starts.count where abs(t - starts[k]) < swipeDuration / 2 {
+            let begin: Double = starts[k] - swipeDuration / 2
+            let p: Double = easeInOut((t - begin) / swipeDuration)
+            let q = CGFloat(p), r = CGFloat(1 - p)
+            let out = Item(scene: k - 1, offset: -H * 0.35 * q, scale: 1 - 0.08 * q, blur: 18 * q, opacity: 1 - p)
+            let incoming = Item(scene: k, offset: H * 0.35 * r, scale: 0.92 + 0.08 * q, blur: 18 * r, opacity: p)
+            return [out, incoming]
+        }
+        let current = starts.lastIndex { $0 <= t } ?? 0
+        return [Item(scene: current, offset: 0, scale: 1, blur: 0, opacity: 1)]
     }
 }
 
@@ -393,17 +719,28 @@ struct Frame: View {
 @MainActor
 func render(lang: String, shotsDir: String, durations: [Double], output: URL, iconPath: String) async throws {
     let copy = copies[lang]!
+    let timeline = Timeline(copy: copy, durations: durations)
     var shots: [String: NSImage] = [:]
-    for name in ["rules", "ask", "history"] {
-        shots[name] = NSImage(contentsOfFile: "\(shotsDir)/\(lang)/\(name).png")
-    }
+    for name in ["ask", "history"] { shots[name] = NSImage(contentsOfFile: "\(shotsDir)/\(lang)/\(name).png") }
     let appIcon = NSImage(contentsOfFile: iconPath)!
+
+    // План звука: фразы, «вжух» на переходах, щелчки мыши.
+    var plan: [String] = []
+    for (i, p) in timeline.phrases.enumerated() { plan.append("voice \(i) \(Int(p.start * 1000))") }
+    for s in timeline.sceneStarts.dropFirst() { plan.append("whoosh \(Int((s - 0.2) * 1000))") }
+    let renameDone = timeline.sceneStarts[1] + timeline.localPhraseStart(scene: 1, index: 1)
+    let clicks = [timeline.sceneStarts[1] + 0.55, renameDone - 0.3,
+                  timeline.sceneStarts[4] + max(2.0, timeline.sceneDurations[4] - 1.6),
+                  timeline.sceneStarts[5] + max(1.5, timeline.sceneDurations[5] - 1.5)]
+    for c in clicks { plan.append("click \(Int(c * 1000))") }
+    plan.append("total \(Int(timeline.total * 1000))")
+    try plan.joined(separator: "\n").write(to: output.appendingPathExtension("plan"), atomically: true, encoding: .utf8)
 
     try? FileManager.default.removeItem(at: output)
     let writer = try AVAssetWriter(outputURL: output, fileType: .mp4)
     let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
         AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: Int(W), AVVideoHeightKey: Int(H),
-        AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: 12_000_000, AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel],
+        AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: 10_000_000, AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel],
     ])
     let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
@@ -413,45 +750,99 @@ func render(lang: String, shotsDir: String, durations: [Double], output: URL, ic
     writer.startWriting()
     writer.startSession(atSourceTime: .zero)
 
-    var frameIndex = 0
-    for (scene, d) in durations.enumerated() {
-        let frames = Int((d * Double(FPS)).rounded())
-        for f in 0..<frames {
-            let t = Double(f) / Double(FPS)
-            let renderer = ImageRenderer(content: Frame(scene: scene, t: t, d: d, global: Double(frameIndex) / Double(FPS),
-                                                        copy: copy, shots: shots, appIcon: appIcon))
-            renderer.scale = 1
-            guard let image = renderer.cgImage else { continue }
-            while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(2)) }
-            var buffer: CVPixelBuffer?
-            CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &buffer)
-            guard let buffer else { continue }
-            CVPixelBufferLockBaseAddress(buffer, [])
-            let ctx = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: Int(W), height: Int(H), bitsPerComponent: 8,
-                                bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)!
-            ctx.draw(image, in: CGRect(x: 0, y: 0, width: W, height: H))
-            CVPixelBufferUnlockBaseAddress(buffer, [])
-            adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frameIndex), timescale: CMTimeScale(FPS)))
-            frameIndex += 1
-        }
-        print("scene \(scene) done (\(frames) frames)")
+    let frames = Int((timeline.total * Double(FPS)).rounded())
+    for f in 0..<frames {
+        let t = Double(f) / Double(FPS)
+        let renderer = ImageRenderer(content: Frame(t: t, timeline: timeline, copy: copy, shots: shots, appIcon: appIcon))
+        renderer.scale = 1
+        guard let image = renderer.cgImage else { continue }
+        while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(2)) }
+        var buffer: CVPixelBuffer?
+        CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &buffer)
+        guard let buffer else { continue }
+        CVPixelBufferLockBaseAddress(buffer, [])
+        let ctx = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: Int(W), height: Int(H), bitsPerComponent: 8,
+                            bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                            bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)!
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: W, height: H))
+        CVPixelBufferUnlockBaseAddress(buffer, [])
+        adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(f), timescale: CMTimeScale(FPS)))
     }
     input.markAsFinished()
     await writer.finishWriting()
     if writer.status != .completed { throw writer.error! }
+    print(String(format: "rendered %d frames, %.1f s", frames, timeline.total))
+}
+
+// MARK: - Сведение звука (ffmpeg с двумя десятками входов зависает — сводим сами)
+
+func mix(plan: String, voiceDir: String, whoosh: String, click: String, output: String) throws {
+    let rate = 48_000.0
+    let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2)!
+    var events: [(String, Double)] = []
+    var total = 0.0
+    for line in try String(contentsOfFile: plan, encoding: .utf8).split(separator: "\n") {
+        let f = line.split(separator: " ").map(String.init)
+        switch f[0] {
+        case "voice": events.append(("\(voiceDir)/\(f[1]).aiff", Double(f[2])! / 1000))
+        case "whoosh": events.append((whoosh, Double(f[1])! / 1000))
+        case "click": events.append((click, Double(f[1])! / 1000))
+        case "total": total = Double(f[1])! / 1000
+        default: break
+        }
+    }
+    let frames = AVAudioFrameCount(total * rate)
+    let out = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames)!
+    out.frameLength = frames
+    for (path, start) in events {
+        let file = try AVAudioFile(forReading: URL(fileURLWithPath: path))
+        let source = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length))!
+        try file.read(into: source)
+        // Приводим к 48 кГц стерео.
+        let converter = AVAudioConverter(from: file.processingFormat, to: format)!
+        let capacity = AVAudioFrameCount(Double(source.frameLength) * rate / file.processingFormat.sampleRate) + 1024
+        let converted = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity)!
+        var fed = false
+        var error: NSError?
+        converter.convert(to: converted, error: &error) { _, status in
+            if fed { status.pointee = .endOfStream; return nil }
+            fed = true
+            status.pointee = .haveData
+            return source
+        }
+        if let error { throw error }
+        let offset = Int(start * rate)
+        for ch in 0..<2 {
+            let dst = out.floatChannelData![ch], src = converted.floatChannelData![ch]
+            for i in 0..<Int(converted.frameLength) where offset + i < Int(frames) && offset + i >= 0 {
+                dst[offset + i] += src[i]
+            }
+        }
+    }
+    let settings: [String: Any] = [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: rate, AVNumberOfChannelsKey: 2,
+                                   AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false]
+    let writer = try AVAudioFile(forWriting: URL(fileURLWithPath: output), settings: settings,
+                                 commonFormat: .pcmFormatFloat32, interleaved: false)
+    try writer.write(from: out)
 }
 
 @main
 struct Main {
     static func main() async throws {
         let a = CommandLine.arguments
-        if a[1] == "lines" {   // promo lines <lang> — тексты озвучки, по строке на сцену
-            print(copies[a[2]]!.lines.joined(separator: "\n"))
-            return
+        switch a[1] {
+        case "lines":
+            for (scene, list) in copies[a[2]]!.phrases.enumerated() {
+                for text in list { print("\(scene)\t\(text)") }
+            }
+        case "render":
+            let durations = try JSONDecoder().decode([Double].self, from: Data(contentsOf: URL(fileURLWithPath: a[4])))
+            _ = NSApplication.shared
+            try await render(lang: a[2], shotsDir: a[3], durations: durations, output: URL(fileURLWithPath: a[5]), iconPath: a[6])
+        case "mix":
+            try mix(plan: a[2], voiceDir: a[3], whoosh: a[4], click: a[5], output: a[6])
+        default:
+            print("usage: promo lines <lang> | promo render <lang> <shots> <durations.json> <out.mp4> <icon.png>")
         }
-        let durations = try JSONDecoder().decode([Double].self, from: Data(contentsOf: URL(fileURLWithPath: a[3])))
-        _ = NSApplication.shared
-        try await render(lang: a[1], shotsDir: a[2], durations: durations, output: URL(fileURLWithPath: a[4]), iconPath: a[5])
     }
 }

@@ -2,7 +2,7 @@
 # Собирает промо-ролики для Instagram Reels: promo/RenameConvert-promo-<lang>-<голос>.mp4 (1080×1920).
 # Запуск: FIXTURES=<папка с образцами> scripts/promo/make-promo.sh [ru en]
 # Голоса: VOICE_RU="Milena (Enhanced)" VOICE_EN="Serena (Premium)" (список — say -v "?"); темп — RATE_RU / RATE_EN.
-# Нейросетевые голоса Microsoft: TTS=edge VOICE_RU=ru-RU-SvetlanaNeural (или ru-RU-DmitryNeural), EDGE_RATE=+8%.
+# Нейросетевые голоса Microsoft: TTS=edge VOICE_RU=ru-RU-SvetlanaNeural (или ru-RU-DmitryNeural), EDGE_RATE=+10%.
 #   Нужен edge-tts: python3 -m venv build/tts-venv && build/tts-venv/bin/pip install edge-tts
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -30,7 +30,7 @@ for L in $LANGS; do
   if [[ $TTS == edge ]]; then
     case $L in ru) VOICE=${VOICE_RU:-ru-RU-SvetlanaNeural} ;; *) VOICE=${VOICE_EN:-en-US-AndrewNeural} ;; esac
   else
-    case $L in ru) VOICE=${VOICE_RU:-Milena}; RATE=${RATE_RU:-200} ;; *) VOICE=${VOICE_EN:-Samantha}; RATE=${RATE_EN:-192} ;; esac
+      case $L in ru) VOICE=${VOICE_RU:-Milena}; RATE=${RATE_RU:-200} ;; *) VOICE=${VOICE_EN:-Samantha}; RATE=${RATE_EN:-192} ;; esac
   fi
   # Имя файла с голосом: RenameConvert-promo-ru-milena-enhanced.mp4
   # (у голосов Microsoft отбрасываем «ru-RU-» и «Neural»: ru-RU-SvetlanaNeural → svetlana)
@@ -39,24 +39,26 @@ for L in $LANGS; do
   AUDIO="$WORK/$L-$SLUG"
   rm -rf "$AUDIO" && mkdir -p "$AUDIO"
 
-  # Каждая фраза — отдельный файл: так анимация и субтитры точно попадают в речь.
-  DURS=() i=0
-  while IFS=$'\t' read -r _scene text; do
-    if [[ $TTS == edge ]]; then
-      build/tts-venv/bin/edge-tts --voice "$VOICE" --rate "${EDGE_RATE:-+8%}" --text "$text" --write-media "$AUDIO/$i.mp3" >/dev/null 2>&1
-      # Обрезаем тишину по краям — анимация и субтитры привязаны к началу фразы.
-      "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/$i.mp3" \
-        -af "silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse" \
-        -ar 48000 -c:a pcm_s16be "$AUDIO/$i.aiff"
-    else
+  if [[ $TTS == edge ]]; then
+    # Весь текст одним куском — естественная речь; время фраз — из меток слов синтезатора.
+    "$WORK/promo" spoken "$L" > "$AUDIO/phrases.json"
+    build/tts-venv/bin/python scripts/promo/tts_edge.py "$AUDIO/phrases.json" "$VOICE" "${EDGE_RATE:-+10%}" \
+      "$AUDIO/full.mp3" "$AUDIO/timings.json" "$FF" "$AUDIO/full.wav"
+    "$FF" -nostdin -hide_banner -loglevel error -y -i "$AUDIO/full.wav" -ar 48000 -c:a pcm_s16be "$AUDIO/full.aiff"
+    TIMINGS="$AUDIO/timings.json"
+  else
+    # Каждая фраза — отдельный файл: так анимация и субтитры точно попадают в речь.
+    DURS=() i=0
+    while IFS=$'\t' read -r _scene text; do
       say -v "$VOICE" -r "$RATE" -o "$AUDIO/$i.aiff" "$text"
-    fi
-    DURS+=("$(afinfo "$AUDIO/$i.aiff" | awk '/estimated duration/ {print $3}')")
-    i=$((i + 1))
-  done < <("$WORK/promo" lines "$L")
-  printf '[%s]\n' "$(IFS=,; echo "${DURS[*]}")" > "$AUDIO/durations.json"
+      DURS+=("$(afinfo "$AUDIO/$i.aiff" | awk '/estimated duration/ {print $3}')")
+      i=$((i + 1))
+    done < <("$WORK/promo" lines "$L")
+    printf '[%s]\n' "$(IFS=,; echo "${DURS[*]}")" > "$AUDIO/durations.json"
+    TIMINGS="$AUDIO/durations.json"
+  fi
 
-  "$WORK/promo" render "$L" "$WORK/shots" "$AUDIO/durations.json" "$AUDIO/video.mp4" "$WORK/icon.png"
+  "$WORK/promo" render "$L" "$WORK/shots" "$TIMINGS" "$AUDIO/video.mp4" "$WORK/icon.png"
 
   # Звуковая дорожка по плану рендера: голос, переходы, щелчки.
   "$WORK/promo" mix "$AUDIO/video.mp4.plan" "$AUDIO" "$WORK/whoosh.wav" "$WORK/click.wav" "$AUDIO/audio.wav"

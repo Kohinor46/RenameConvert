@@ -48,13 +48,13 @@ let copies: [String: Copy] = [
             ["Поэтому обычно всё заканчивается поиском онлайн-конвертера."],
             ["Загружаешь файл, ждёшь, скачиваешь обратно.", "А если файлов двадцать?"],
             ["Эту проблему решает RenameConvert."],
-            ["Меняешь расширение на JPG — и файл действительно становится JPG."],
-            ["Так же с видео, музыкой, документами и архивами. Внутри даже есть FFmpeg."],
+            ["Меняешь расширение на JPG, и файл действительно становится JPG."],
+            ["Так же с видео, музыкой, документами и архивами.", "Внутри даже есть FFmpeg."],
             ["Для большого видео он спросит, какой нужен кодек и качество."],
             ["Всё происходит прямо на Маке, файлы никуда не загружаются."],
             ["Ощущение, будто это встроенная функция macOS."],
-            ["И да — это бесплатно."],
-            ["Ссылка в описании. Сохрани, чтобы не потерять."],
+            ["И да, это бесплатно."],
+            ["Ссылка в описании.", "Сохрани, чтобы не потерять."],
         ],
         menus: ["Finder", "Файл", "Правка", "Вид", "Переход", "Окно", "Справка"],
         folder: "Загрузки",
@@ -81,12 +81,12 @@ let copies: [String: Copy] = [
             ["Upload, wait, download it back.", "And what if you have twenty files?"],
             ["RenameConvert fixes this."],
             ["Change the extension to JPG, and the file actually becomes a JPG."],
-            ["Same with video, music, documents, and archives. There's even FFmpeg inside."],
+            ["Same with video, music, documents, and archives.", "There's even FFmpeg inside."],
             ["For a big video, it asks which codec and quality you want."],
             ["Everything happens right on your Mac. Nothing gets uploaded."],
             ["It feels like a built-in macOS feature."],
             ["And yes, it's free."],
-            ["Link in the description. Save this so you don't lose it."],
+            ["Link in the description.", "Save this so you don't lose it."],
         ],
         menus: ["Finder", "File", "Edit", "View", "Go", "Window", "Help"],
         folder: "Downloads",
@@ -106,6 +106,16 @@ let copies: [String: Copy] = [
         date: "Sun Oct 11 1:44 PM"),
 ]
 
+/// Как русскому голосу произносить английские названия — только для озвучки, не для субтитров.
+let pronunciation: [String: [(String, String)]] = [
+    "ru": [("RenameConvert", "Ринейм Конверт"), ("macOS", "мак О Эс"), ("Finder", "Файндер"), ("FFmpeg", "эф эф эм пэг"),
+           ("HEIC", "хейк"), ("JPG", "джейпег"), ("MKV", "эм ка вэ"), ("WebP", "веб пэ"), ("OGG", "огг")],
+]
+
+func spoken(_ text: String, lang: String) -> String {
+    (pronunciation[lang] ?? []).reduce(text) { $0.replacingOccurrences(of: $1.0, with: $1.1) }
+}
+
 /// Минимальная длительность сцен (сек), чтобы успела анимация.
 let minDurations: [Double] = [2.2, 2.6, 4.2, 3.4, 4.2, 2.4, 4.4, 4.0, 3.8, 3.0, 2.6, 2.0, 2.6]
 
@@ -119,7 +129,33 @@ struct Timeline {
     let phrases: [Phrase]
     var total: Double { sceneStarts.last! + sceneDurations.last! }
 
+    /// Озвучка одним куском: время фраз [[начало, конец]] берётся из меток слов синтезатора.
+    let continuousVoice: Bool
+
+    init(copy: Copy, timings: [[Double]]) {
+        let lead = 0.2
+        var phrases: [Phrase] = [], firstStart: [Double] = []
+        var k = 0
+        for (scene, texts) in copy.phrases.enumerated() {
+            for text in texts {
+                let start = timings[k][0], end = timings[k][1]
+                phrases.append(Phrase(scene: scene, text: text, start: start, duration: end - start))
+                if firstStart.count == scene { firstStart.append(start) }
+                k += 1
+            }
+        }
+        // Склейка — чуть раньше первой фразы сцены; сцена длится до следующей склейки.
+        var starts = firstStart.enumerated().map { $0.offset == 0 ? 0 : max(0, $0.element - lead) }
+        for i in 1..<starts.count { starts[i] = max(starts[i], starts[i - 1] + 1.2) }
+        let end = timings.last![1] + 0.7
+        sceneStarts = starts
+        sceneDurations = starts.enumerated().map { i, s in (i + 1 < starts.count ? starts[i + 1] : end) - s }
+        self.phrases = phrases
+        continuousVoice = true
+    }
+
     init(copy: Copy, durations: [Double]) {
+        continuousVoice = false
         var starts: [Double] = [], lengths: [Double] = [], phrases: [Phrase] = []
         var t = 0.0, k = 0
         for (scene, texts) in copy.phrases.enumerated() {
@@ -1002,17 +1038,27 @@ let shotsList = shots
 
 // MARK: - Запись
 
+func loadTimeline(copy: Copy, path: String) throws -> Timeline {
+    let data = try Data(contentsOf: URL(fileURLWithPath: path))
+    if let timings = try? JSONDecoder().decode([[Double]].self, from: data) { return Timeline(copy: copy, timings: timings) }
+    return Timeline(copy: copy, durations: try JSONDecoder().decode([Double].self, from: data))
+}
+
 @MainActor
-func render(lang: String, shotsDir: String, durations: [Double], output: URL, iconPath: String) async throws {
+func render(lang: String, shotsDir: String, timingsPath: String, output: URL, iconPath: String) async throws {
     let copy = copies[lang]!
-    let timeline = Timeline(copy: copy, durations: durations)
+    let timeline = try loadTimeline(copy: copy, path: timingsPath)
     var images: [String: NSImage] = [:]
     for name in ["ask", "history"] { images[name] = NSImage(contentsOfFile: "\(shotsDir)/\(lang)/\(name).png") }
     let appIcon = NSImage(contentsOfFile: iconPath)!
 
     // План звука: фразы, мягкий «вжух» на склейках, щелчки мыши.
     var plan: [String] = []
-    for (i, p) in timeline.phrases.enumerated() { plan.append("voice \(i) \(Int(p.start * 1000))") }
+    if timeline.continuousVoice {
+        plan.append("voice full 0")
+    } else {
+        for (i, p) in timeline.phrases.enumerated() { plan.append("voice \(i) \(Int(p.start * 1000))") }
+    }
     for s in timeline.sceneStarts.dropFirst() { plan.append("whoosh \(Int((s - 0.15) * 1000))") }
     let st = timeline.sceneStarts, sd = timeline.sceneDurations
     for c in [st[0] + 1.1, st[2] + 1.4, st[5] + 0.65, st[6] + 2.15, st[8] + max(2.0, sd[8] - 1.2)] {
@@ -1117,16 +1163,17 @@ struct Main {
             for (scene, list) in copies[a[2]]!.phrases.enumerated() {
                 for text in list { print("\(scene)\t\(text)") }
             }
+        case "spoken":   // promo spoken <lang> — фразы для озвучки (JSON), с произношением названий
+            let list = copies[a[2]]!.phrases.flatMap { $0 }.map { spoken($0, lang: a[2]) }
+            print(String(data: try JSONEncoder().encode(list), encoding: .utf8)!)
         case "render":
-            let durations = try JSONDecoder().decode([Double].self, from: Data(contentsOf: URL(fileURLWithPath: a[4])))
             _ = NSApplication.shared
-            try await render(lang: a[2], shotsDir: a[3], durations: durations, output: URL(fileURLWithPath: a[5]), iconPath: a[6])
+            try await render(lang: a[2], shotsDir: a[3], timingsPath: a[4], output: URL(fileURLWithPath: a[5]), iconPath: a[6])
         case "frame":   // promo frame <lang> <shots> <durations.json> <t> <out.png> <icon.png> — один кадр для отладки
-            let durations = try JSONDecoder().decode([Double].self, from: Data(contentsOf: URL(fileURLWithPath: a[4])))
             _ = NSApplication.shared
             try await MainActor.run {
                 let copy = copies[a[2]]!
-                let timeline = Timeline(copy: copy, durations: durations)
+                let timeline = try loadTimeline(copy: copy, path: a[4])
                 var images: [String: NSImage] = [:]
                 for name in ["ask", "history"] { images[name] = NSImage(contentsOfFile: "\(a[3])/\(a[2])/\(name).png") }
                 let t = Double(a[5])!

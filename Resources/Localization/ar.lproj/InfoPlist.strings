@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "لتحويل الملفات التي تعيد تسميتها على سطح المكتب.";
+"NSDocumentsFolderUsageDescription" = "لتحويل الملفات التي تعيد تسميتها في مجلد المستندات.";
+"NSDownloadsFolderUsageDescription" = "لتحويل الملفات التي تعيد تسميتها في مجلد التنزيلات.";
+"NSRemovableVolumesUsageDescription" = "لتحويل الملفات على الأقراص الخارجية.";
+"NSNetworkVolumesUsageDescription" = "لتحويل الملفات على أقراص الشبكة.";

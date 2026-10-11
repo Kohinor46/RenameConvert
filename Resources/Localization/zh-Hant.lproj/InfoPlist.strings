@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "用於轉換你在「桌面」上重新命名的檔案。";
+"NSDocumentsFolderUsageDescription" = "用於轉換你在「文件」中重新命名的檔案。";
+"NSDownloadsFolderUsageDescription" = "用於轉換你在「下載」中重新命名的檔案。";
+"NSRemovableVolumesUsageDescription" = "用於轉換外接磁碟上的檔案。";
+"NSNetworkVolumesUsageDescription" = "用於轉換網路磁碟上的檔案。";

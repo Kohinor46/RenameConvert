@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Щоб конвертувати файли, які ви перейменовуєте на Робочому столі.";
+"NSDocumentsFolderUsageDescription" = "Щоб конвертувати файли, які ви перейменовуєте в Документах.";
+"NSDownloadsFolderUsageDescription" = "Щоб конвертувати файли, які ви перейменовуєте в Завантаженнях.";
+"NSRemovableVolumesUsageDescription" = "Щоб конвертувати файли на зовнішніх дисках.";
+"NSNetworkVolumesUsageDescription" = "Щоб конвертувати файли на мережевих дисках.";

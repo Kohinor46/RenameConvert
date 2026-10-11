@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Om bestanden te converteren waarvan je de naam wijzigt op het bureaublad.";
+"NSDocumentsFolderUsageDescription" = "Om bestanden te converteren waarvan je de naam wijzigt in Documenten.";
+"NSDownloadsFolderUsageDescription" = "Om bestanden te converteren waarvan je de naam wijzigt in Downloads.";
+"NSRemovableVolumesUsageDescription" = "Om bestanden op externe schijven te converteren.";
+"NSNetworkVolumesUsageDescription" = "Om bestanden op netwerkschijven te converteren.";

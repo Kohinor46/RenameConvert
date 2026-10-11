@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "För att konvertera filer som du döper om på skrivbordet.";
+"NSDocumentsFolderUsageDescription" = "För att konvertera filer som du döper om i Dokument.";
+"NSDownloadsFolderUsageDescription" = "För att konvertera filer som du döper om i Hämtade filer.";
+"NSRemovableVolumesUsageDescription" = "För att konvertera filer på externa enheter.";
+"NSNetworkVolumesUsageDescription" = "För att konvertera filer på nätverksenheter.";

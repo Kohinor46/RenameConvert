@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Untuk mengonversi file yang Anda ganti namanya di Desktop.";
+"NSDocumentsFolderUsageDescription" = "Untuk mengonversi file yang Anda ganti namanya di Dokumen.";
+"NSDownloadsFolderUsageDescription" = "Untuk mengonversi file yang Anda ganti namanya di Unduhan.";
+"NSRemovableVolumesUsageDescription" = "Untuk mengonversi file di disk eksternal.";
+"NSNetworkVolumesUsageDescription" = "Untuk mengonversi file di disk jaringan.";

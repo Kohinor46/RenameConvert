@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "כדי להמיר קבצים ששמם משתנה בשולחן העבודה.";
+"NSDocumentsFolderUsageDescription" = "כדי להמיר קבצים ששמם משתנה בתיקיית המסמכים.";
+"NSDownloadsFolderUsageDescription" = "כדי להמיר קבצים ששמם משתנה בתיקיית ההורדות.";
+"NSRemovableVolumesUsageDescription" = "כדי להמיר קבצים בכוננים חיצוניים.";
+"NSNetworkVolumesUsageDescription" = "כדי להמיר קבצים בכונני רשת.";

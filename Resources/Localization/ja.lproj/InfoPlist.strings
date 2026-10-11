@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "デスクトップで名前を変更したファイルを変換するため。";
+"NSDocumentsFolderUsageDescription" = "書類フォルダで名前を変更したファイルを変換するため。";
+"NSDownloadsFolderUsageDescription" = "ダウンロードフォルダで名前を変更したファイルを変換するため。";
+"NSRemovableVolumesUsageDescription" = "外部ディスク上のファイルを変換するため。";
+"NSNetworkVolumesUsageDescription" = "ネットワークディスク上のファイルを変換するため。";

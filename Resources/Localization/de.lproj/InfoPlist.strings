@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Um Dateien zu konvertieren, die du auf dem Schreibtisch umbenennst.";
+"NSDocumentsFolderUsageDescription" = "Um Dateien zu konvertieren, die du im Ordner „Dokumente“ umbenennst.";
+"NSDownloadsFolderUsageDescription" = "Um Dateien zu konvertieren, die du im Ordner „Downloads“ umbenennst.";
+"NSRemovableVolumesUsageDescription" = "Um Dateien auf externen Laufwerken zu konvertieren.";
+"NSNetworkVolumesUsageDescription" = "Um Dateien auf Netzwerklaufwerken zu konvertieren.";

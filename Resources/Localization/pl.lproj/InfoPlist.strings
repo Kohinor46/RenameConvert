@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Aby konwertować pliki, których nazwy zmieniasz na Biurku.";
+"NSDocumentsFolderUsageDescription" = "Aby konwertować pliki, których nazwy zmieniasz w folderze Dokumenty.";
+"NSDownloadsFolderUsageDescription" = "Aby konwertować pliki, których nazwy zmieniasz w folderze Pobrane rzeczy.";
+"NSRemovableVolumesUsageDescription" = "Aby konwertować pliki na dyskach zewnętrznych.";
+"NSNetworkVolumesUsageDescription" = "Aby konwertować pliki na dyskach sieciowych.";

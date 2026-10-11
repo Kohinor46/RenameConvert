@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>RCUpdateRepository</key>
+	<string>Kohinor46/RenameConvert</string>
+	<key>CFBundleIdentifier</key>
+	<string>local.renameconvert</string>
+	<key>CFBundleName</key>
+	<string>RenameConvert</string>
+	<key>CFBundleDisplayName</key>
+	<string>RenameConvert</string>
+	<key>CFBundleExecutable</key>
+	<string>RenameConvert</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.1</string>
+	<key>CFBundleVersion</key>
+	<string>3</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Конвертация картинок при смене расширения</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Чтобы конвертировать файлы, которые вы переименовываете на Рабочем столе.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Чтобы конвертировать файлы, которые вы переименовываете в Документах.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Чтобы конвертировать файлы, которые вы переименовываете в Загрузках.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Чтобы конвертировать файлы на внешних дисках.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>Чтобы конвертировать файлы на сетевых дисках.</string>
+</dict>
+</plist>

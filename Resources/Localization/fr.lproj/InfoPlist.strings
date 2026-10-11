@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Pour convertir les fichiers que vous renommez sur le Bureau.";
+"NSDocumentsFolderUsageDescription" = "Pour convertir les fichiers que vous renommez dans Documents.";
+"NSDownloadsFolderUsageDescription" = "Pour convertir les fichiers que vous renommez dans Téléchargements.";
+"NSRemovableVolumesUsageDescription" = "Pour convertir les fichiers sur les disques externes.";
+"NSNetworkVolumesUsageDescription" = "Pour convertir les fichiers sur les disques réseau.";

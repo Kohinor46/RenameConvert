@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Masaüstünde yeniden adlandırdığınız dosyaları dönüştürmek için.";
+"NSDocumentsFolderUsageDescription" = "Belgeler klasöründe yeniden adlandırdığınız dosyaları dönüştürmek için.";
+"NSDownloadsFolderUsageDescription" = "İndirilenler klasöründe yeniden adlandırdığınız dosyaları dönüştürmek için.";
+"NSRemovableVolumesUsageDescription" = "Harici disklerdeki dosyaları dönüştürmek için.";
+"NSNetworkVolumesUsageDescription" = "Ağ disklerindeki dosyaları dönüştürmek için.";

@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "데스크탑에서 이름을 변경한 파일을 변환하기 위해 필요합니다.";
+"NSDocumentsFolderUsageDescription" = "문서 폴더에서 이름을 변경한 파일을 변환하기 위해 필요합니다.";
+"NSDownloadsFolderUsageDescription" = "다운로드 폴더에서 이름을 변경한 파일을 변환하기 위해 필요합니다.";
+"NSRemovableVolumesUsageDescription" = "외장 디스크의 파일을 변환하기 위해 필요합니다.";
+"NSNetworkVolumesUsageDescription" = "네트워크 디스크의 파일을 변환하기 위해 필요합니다.";

@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Per convertire i file che rinomini sulla Scrivania.";
+"NSDocumentsFolderUsageDescription" = "Per convertire i file che rinomini in Documenti.";
+"NSDownloadsFolderUsageDescription" = "Per convertire i file che rinomini in Download.";
+"NSRemovableVolumesUsageDescription" = "Per convertire i file sui dischi esterni.";
+"NSNetworkVolumesUsageDescription" = "Per convertire i file sui dischi di rete.";

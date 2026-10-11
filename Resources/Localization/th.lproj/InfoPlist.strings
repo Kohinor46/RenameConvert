@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "เพื่อแปลงไฟล์ที่คุณเปลี่ยนชื่อบนเดสก์ท็อป";
+"NSDocumentsFolderUsageDescription" = "เพื่อแปลงไฟล์ที่คุณเปลี่ยนชื่อในเอกสาร";
+"NSDownloadsFolderUsageDescription" = "เพื่อแปลงไฟล์ที่คุณเปลี่ยนชื่อในดาวน์โหลด";
+"NSRemovableVolumesUsageDescription" = "เพื่อแปลงไฟล์บนดิสก์ภายนอก";
+"NSNetworkVolumesUsageDescription" = "เพื่อแปลงไฟล์บนดิสก์เครือข่าย";

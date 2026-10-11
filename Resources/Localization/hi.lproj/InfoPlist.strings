@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "डेस्कटॉप पर जिन फ़ाइलों का नाम आप बदलते हैं, उन्हें कन्वर्ट करने के लिए।";
+"NSDocumentsFolderUsageDescription" = "दस्तावेज़ में जिन फ़ाइलों का नाम आप बदलते हैं, उन्हें कन्वर्ट करने के लिए।";
+"NSDownloadsFolderUsageDescription" = "डाउनलोड में जिन फ़ाइलों का नाम आप बदलते हैं, उन्हें कन्वर्ट करने के लिए।";
+"NSRemovableVolumesUsageDescription" = "बाहरी डिस्क पर मौजूद फ़ाइलों को कन्वर्ट करने के लिए।";
+"NSNetworkVolumesUsageDescription" = "नेटवर्क डिस्क पर मौजूद फ़ाइलों को कन्वर्ट करने के लिए।";

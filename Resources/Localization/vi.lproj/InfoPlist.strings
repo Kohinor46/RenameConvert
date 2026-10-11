@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Để chuyển đổi các tệp bạn đổi tên trên Màn hình nền.";
+"NSDocumentsFolderUsageDescription" = "Để chuyển đổi các tệp bạn đổi tên trong Tài liệu.";
+"NSDownloadsFolderUsageDescription" = "Để chuyển đổi các tệp bạn đổi tên trong Tải về.";
+"NSRemovableVolumesUsageDescription" = "Để chuyển đổi các tệp trên ổ đĩa ngoài.";
+"NSNetworkVolumesUsageDescription" = "Để chuyển đổi các tệp trên ổ đĩa mạng.";

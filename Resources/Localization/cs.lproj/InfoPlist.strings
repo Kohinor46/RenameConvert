@@ -1,0 +1,5 @@
+"NSDesktopFolderUsageDescription" = "Aby bylo možné převádět soubory, které přejmenujete na ploše.";
+"NSDocumentsFolderUsageDescription" = "Aby bylo možné převádět soubory, které přejmenujete ve složce Dokumenty.";
+"NSDownloadsFolderUsageDescription" = "Aby bylo možné převádět soubory, které přejmenujete ve složce Stažené soubory.";
+"NSRemovableVolumesUsageDescription" = "Aby bylo možné převádět soubory na externích discích.";
+"NSNetworkVolumesUsageDescription" = "Aby bylo možné převádět soubory na síťových discích.";

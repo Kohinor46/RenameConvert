@@ -18,7 +18,7 @@ for L in $LANGS; do [[ -f "$WORK/shots/$L/rules.png" ]] || scripts/promo/make-sh
 
 # Звуковые эффекты (синтезированы, без чужих сэмплов): «вжух» для переходов и щелчок мыши.
 "$FF" -nostdin -hide_banner -loglevel error -y -f lavfi -i "anoisesrc=d=0.4:c=pink:a=0.6" \
-  -af "highpass=f=300,lowpass=f=5000,afade=t=in:d=0.22:curve=exp,afade=t=out:st=0.22:d=0.18,volume=0.22" \
+  -af "highpass=f=300,lowpass=f=5000,afade=t=in:d=0.22:curve=exp,afade=t=out:st=0.22:d=0.18,volume=0.12" \
   -ar 48000 -ac 2 "$WORK/whoosh.wav"
 "$FF" -nostdin -hide_banner -loglevel error -y -f lavfi -i "anoisesrc=d=0.03:c=white:a=0.8" \
   -af "highpass=f=1800,afade=t=out:st=0.004:d=0.026,volume=0.5" -ar 48000 -ac 2 "$WORK/click.wav"

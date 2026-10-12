@@ -164,6 +164,23 @@ enum Formats {
         return nil
     }
 
+    /// Во что можно сконвертировать файл с расширением `ext` — для контекстного меню Finder.
+    /// Группы по категориям (своя категория первой), без синонимов (jpg, но не jpeg).
+    static func targets(from ext: String) -> [[String]] {
+        let groups: [(FileCategory, [String])] = [
+            (.image, allImageTargets), (.video, allVideoTargets), (.audio, allAudioTargets),
+            (.document, documentTargets), (.data, dataFormats), (.archive, archiveFormats),
+        ]
+        let own = category(of: ext) ?? (allVideoSources.contains(ext.lowercased()) ? .video
+                                         : allAudioSources.contains(ext.lowercased()) ? .audio : nil)
+        var seen = Set<String>()
+        let ordered = groups.filter { $0.0 == own } + groups.filter { $0.0 != own }
+        return ordered.compactMap { _, candidates in
+            let found = candidates.filter { plan(from: ext, to: $0) != nil && seen.insert(canonicalExtension($0)).inserted }
+            return found.isEmpty ? nil : found
+        }
+    }
+
     /// Все расширения, которые встречаются в планах, — для выбора в правилах.
     static func knownExtensions(in category: FileCategory) -> [String] {
         let all: [String]

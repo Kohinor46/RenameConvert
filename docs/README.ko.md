@@ -43,6 +43,10 @@ macOS가 자체적으로 처리하지 못하는 형식(WebP, MP3, MKV, AVI, WebM
 **FFmpeg 7.1**(LGPL 2.1, LAME 및 libwebp 포함)로 변환됩니다. FFmpeg는 `scripts/build-ffmpeg.sh`를 통해 공식 소스에서
 SHA-256 검증을 거쳐 빌드되며, 시스템 라이브러리에만 의존합니다.
 
+**Finder 컨텍스트 메뉴:** 파일(여러 개도 가능)을 오른쪽 클릭 → **다음으로 변환** → 포맷 선택.
+확장자를 바꾼 것처럼 파일이 바로 변환됩니다. Finder 확장 프로그램은 처음 실행할 때 켜집니다.
+시스템 설정 → 일반 → 로그인 항목 및 확장 프로그램(또는 앱의 설정 → ‘Finder 확장 프로그램 설정…’)에서 끌 수 있습니다.
+
 **규칙.** 모든 "원본 → 대상" 조합(확장자, 카테고리 또는 "모두")에 대해 동작을 선택할 수 있습니다.
 먼저 묻기, 즉시 변환, 변환하지 않기 — 그리고 원본을 유지할지 여부까지.
 가장 구체적인 규칙이 우선 적용되며, 기본값은 비디오는 "묻기", 나머지는 모두 "즉시 변환"입니다.
@@ -102,6 +106,7 @@ macOS 15 이상과 Command Line Tools(`xcode-select --install`)가 필요합니�
 | `AppModel.swift` | 설정, 대기열, 확인 요청, 기록, 알림 |
 | `AskPanel.swift`, `ParamsForm.swift` | 확인 패널과 매개변수 양식 |
 | `RenameConvertApp.swift`, `SettingsView.swift` | 메뉴 막대 메뉴와 설정 윈도우 |
+| `FinderExtension/`, `FinderMenu.swift` | Finder 확장 프로그램(‘다음으로 변환’ 하위 메뉴)과 앱에서의 요청 처리 |
 
 ## 포함된 구성 요소의 라이선스
 

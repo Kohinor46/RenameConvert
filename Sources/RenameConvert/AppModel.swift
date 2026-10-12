@@ -22,6 +22,7 @@ struct HistoryEntry: Codable, Identifiable, Hashable {
 struct ActiveJob: Identifiable {
     let id: UUID
     let title: String
+    let path: String
     var progress: Double?
     var task: Task<Void, Never>?
 }
@@ -81,6 +82,7 @@ final class AppModel {
     private static let maxRunningJobs = max(2, ProcessInfo.processInfo.activeProcessorCount / 4)
     @ObservationIgnored private let notifications = NotificationManager()
     @ObservationIgnored private lazy var askPanel = AskPanelController(model: self)
+    @ObservationIgnored private var finderMenuReceiver: FinderMenuURLReceiver?
 
     private enum Keys {
         static let paused = "paused", keepOriginal = "keepOriginal", notify = "notify"
@@ -136,6 +138,11 @@ final class AppModel {
             MainActor.assumeIsolated { self?.handleRename(old: old, new: new) }
         }
         watcher.start(paths: folders)
+
+        finderMenuReceiver = FinderMenuURLReceiver { [weak self] url in
+            MainActor.assumeIsolated { self?.handleFinderMenu(url) }
+        }
+        FinderMenu.setUp(defaults: defaults)
     }
 
     // MARK: Настройки
@@ -186,6 +193,8 @@ final class AppModel {
         guard !paused else { return }
         suppressed = suppressed.filter { Date().timeIntervalSince($0.value) < 5 }
         guard suppressed[new] == nil else { return }
+        // Этот файл уже конвертируется (например, его только что переименовало меню Finder).
+        guard !activeJobs.contains(where: { $0.path == new }) else { return }
         guard !excludedFolders.contains(where: { new.hasPrefix($0.hasSuffix("/") ? $0 : $0 + "/") }) else { return }
 
         let oldName = (old as NSString).lastPathComponent
@@ -200,13 +209,8 @@ final class AppModel {
         }
 
         let rule = rules.bestMatch(from: from, to: to)
-        let keep: Bool
-        switch rule?.keepOriginal ?? .inherit {
-        case .inherit: keep = keepOriginal
-        case .keep: keep = true
-        case .discard: keep = false
-        }
-        let job = ConversionJob(path: new, oldName: oldName, plan: plan, params: params, keepOriginal: keep)
+        let job = ConversionJob(path: new, oldName: oldName, plan: plan, params: params,
+                                keepOriginal: keepOriginal(for: rule))
         let action = rule?.action ?? defaultAction
         Log.info("Переименование \(oldName) → \(newName): \(plan.engine), действие \(action.rawValue)")
 
@@ -216,6 +220,57 @@ final class AppModel {
         case .ask:
             pendingAsks.append(PendingAsk(job: job))
             askPanel.show()
+        }
+    }
+
+    private func keepOriginal(for rule: Rule?) -> Bool {
+        switch rule?.keepOriginal ?? .inherit {
+        case .inherit: return keepOriginal
+        case .keep: return true
+        case .discard: return false
+        }
+    }
+
+    // MARK: Контекстное меню Finder
+
+    /// Пользователь явно выбрал формат, поэтому пауза, исключения и «спросить»/«не конвертировать»
+    /// из правил не действуют; а сохранять ли оригинал — решают правила, как обычно.
+    private func handleFinderMenu(_ url: URL) {
+        guard let (to, paths) = FinderMenu.parse(url) else { return }
+        let fm = FileManager.default
+        for path in paths.map({ URL(fileURLWithPath: $0).standardizedFileURL.path }) {
+            let name = (path as NSString).lastPathComponent
+            let from = Formats.fileExtension(of: name)
+            guard fm.fileExists(atPath: path), let plan = Formats.plan(from: from, to: to),
+                  let target = FinderMenu.destination(for: path, to: to) else { continue }
+            // Делаем то же, что пользователь, — меняем расширение — и сразу конвертируем.
+            suppressed[target] = Date()
+            do {
+                try fm.moveItem(atPath: path, toPath: target)
+            } catch {
+                Log.error("Меню Finder: не удалось переименовать \(name): \(error)")
+                reportFailure(name: (target as NSString).lastPathComponent, report: name, error: error)
+                continue
+            }
+            var job = ConversionJob(path: target, oldName: name, plan: plan, params: params,
+                                    keepOriginal: keepOriginal(for: rules.bestMatch(from: from, to: to)))
+            job.revertRenameOnFailure = true
+            Log.info("Меню Finder: \(name) → \(job.newName): \(plan.engine)")
+            start(job)
+        }
+    }
+
+    /// Возвращает файлу старое имя, если конвертация из меню Finder не удалась.
+    private func revertRename(_ job: ConversionJob) {
+        guard job.revertRenameOnFailure else { return }
+        let fm = FileManager.default
+        let original = (job.directory as NSString).appendingPathComponent(job.oldName)
+        guard fm.fileExists(atPath: job.path), !fm.fileExists(atPath: original) else { return }
+        suppressed[original] = Date()
+        do {
+            try fm.moveItem(atPath: job.path, toPath: original)
+        } catch {
+            Log.error("Не удалось вернуть имя \(job.oldName): \(error)")
         }
     }
 
@@ -240,7 +295,7 @@ final class AppModel {
     // MARK: Конвертация
 
     private func start(_ job: ConversionJob) {
-        activeJobs.append(ActiveJob(id: job.id, title: "\(job.oldName) → \(job.newName)"))
+        activeJobs.append(ActiveJob(id: job.id, title: "\(job.oldName) → \(job.newName)", path: job.path))
         queued.append(job)
         startQueued()
     }
@@ -275,6 +330,7 @@ final class AppModel {
             task.cancel()
         } else {
             // Ещё в очереди — просто убираем.
+            if let queuedJob = queued.first(where: { $0.id == job.id }) { revertRename(queuedJob) }
             queued.removeAll { $0.id == job.id }
             activeJobs.removeAll { $0.id == job.id }
             Log.info("Отменено до запуска: \(job.title)")
@@ -312,14 +368,20 @@ final class AppModel {
             }
         case .failure(let error) where Self.isCancellation(error):
             Log.info("Отменено: \(job.oldName) → \(job.newName)")
+            revertRename(job)
         case .failure(let error):
             Log.error("\(job.oldName) → \(job.newName) [\(job.plan.engine)]: \(error)")
-            lastError = "\(job.newName): \(error.localizedDescription)"
-            if notify {
-                notifications.post(title: String(localized: "Не удалось сконвертировать \(job.newName)"),
-                                   body: error.localizedDescription,
-                                   kind: .error(report: "\(job.oldName) → \(job.newName)\n\(error.localizedDescription)"))
-            }
+            revertRename(job)
+            reportFailure(name: job.newName, report: "\(job.oldName) → \(job.newName)", error: error)
+        }
+    }
+
+    private func reportFailure(name: String, report: String, error: Error) {
+        lastError = "\(name): \(error.localizedDescription)"
+        if notify {
+            notifications.post(title: String(localized: "Не удалось сконвертировать \(name)"),
+                               body: error.localizedDescription,
+                               kind: .error(report: "\(report)\n\(error.localizedDescription)"))
         }
     }
 

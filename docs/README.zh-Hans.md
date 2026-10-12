@@ -43,6 +43,10 @@ macOS 本身无法处理的格式（WebP、MP3、MKV、AVI、WebM、OGG…）由
 **FFmpeg 7.1**（LGPL 2.1，包含 LAME 和 libwebp）进行转换。它由 `scripts/build-ffmpeg.sh` 从官方源码构建，
 经过 SHA-256 校验，且仅依赖系统库。
 
+**Finder 右键菜单：** 右键点按一个（或多个）文件 → **转换为** → 选择格式。
+文件会立即转换，就像你修改了扩展名一样。Finder 扩展会在首次启动时开启；
+可在“系统设置”→“通用”→“登录项与扩展”中关闭（或在 App 中：设置 →“Finder 扩展设置…”）。
+
 **规则。** 对于任意“源 → 目标”组合（扩展名、类别或“任意”），你都可以选择处理方式：
 先询问、立即转换或不转换，以及是否保留原件。
 最具体的规则优先生效；默认情况下，视频为“询问”，其他所有类型为“立即转换”。
@@ -103,6 +107,7 @@ GIF 帧率和宽度；AAC/MP3 比特率；PDF 页面尺寸。
 | `AppModel.swift` | 设置、队列、询问、历史记录、通知 |
 | `AskPanel.swift`、`ParamsForm.swift` | 确认面板和参数表单 |
 | `RenameConvertApp.swift`、`SettingsView.swift` | 菜单栏菜单和设置窗口 |
+| `FinderExtension/`, `FinderMenu.swift` | Finder 扩展（“转换为”子菜单）及 App 中对其请求的处理 |
 
 ## 内置组件的许可证
 

@@ -43,6 +43,10 @@ Formáty, které macOS sám nezvládne (WebP, MP3, MKV, AVI, WebM, OGG…), pře
 **FFmpeg 7.1** (LGPL 2.1, s LAME a libwebp). Sestavuje se z oficiálních zdrojů skriptem `scripts/build-ffmpeg.sh`
 s kontrolou SHA-256 a závisí pouze na systémových knihovnách.
 
+**Kontextová nabídka Finderu:** klikněte na soubor (nebo více souborů) pravým tlačítkem → **Převést na** → vyberte formát.
+Soubor se hned převede, jako byste mu změnili příponu. Rozšíření Finderu se zapne při prvním spuštění;
+vypnout ho můžete v Nastavení systému → Obecné → Položky otevírané po přihlášení a rozšíření (nebo v aplikaci: Nastavení → „Nastavení rozšíření Finderu…“).
+
 **Pravidla.** Pro libovolnou dvojici „z → do“ (příponu, kategorii nebo „cokoli“) si zvolíte, co se stane:
 nejdřív se zeptat, převést ihned, nebo nepřevádět — a zda ponechat originál.
 Vyhrává nejkonkrétnější pravidlo; ve výchozím stavu je pro video nastaveno „Zeptat se“ a pro vše ostatní „Převést ihned“.
@@ -103,6 +107,7 @@ Propagační videa: `scripts/promo/make-promo.sh` (namluvení pomocí `say`, sn�
 | `AppModel.swift` | Nastavení, fronta, dotazy, historie, oznámení |
 | `AskPanel.swift`, `ParamsForm.swift` | Potvrzovací panel a formulář parametrů |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Nabídka v řádku nabídek a okno nastavení |
+| `FinderExtension/`, `FinderMenu.swift` | Rozšíření Finderu (podnabídka „Převést na“) a zpracování jeho požadavků v aplikaci |
 
 ## Licence přibalených komponent
 

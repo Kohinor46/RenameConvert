@@ -174,3 +174,10 @@
 "Поддержать" = "Dukung";
 "Не удалось положить оригинал в Корзину, файл не изменён: %@" = "Tidak dapat memindahkan asli ke Tempat Sampah, file tidak diubah: %@";
 "У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "Pembaruan tidak memiliki checksum — unduh secara manual dari halaman rilis.";
+"Конвертировать в" = "Konversi ke";
+"Пункт «Конвертировать в» в меню Finder" = "“Konversi ke” di menu Finder";
+"Включён" = "Aktif";
+"Выключен" = "Nonaktif";
+"Настроить расширения Finder…" = "Pengaturan Ekstensi Finder…";
+"Контекстное меню" = "Menu Konteks";
+"Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Klik kanan file di Finder dan pilih format — file langsung dikonversi tanpa perlu mengganti nama.";

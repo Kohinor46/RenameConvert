@@ -82,6 +82,7 @@ struct SettingsView: View {
 
 private struct GeneralTab: View {
     @Bindable var model: AppModel
+    @State private var finderMenuEnabled = FinderMenu.isEnabled
 
     var body: some View {
         Form {
@@ -127,6 +128,22 @@ private struct GeneralTab: View {
             Section("Как пользоваться") {
                 Text("Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы».")
                     .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Section {
+                LabeledContent("Пункт «Конвертировать в» в меню Finder") {
+                    Text(finderMenuEnabled ? "Включён" : "Выключен")
+                        .foregroundStyle(finderMenuEnabled ? .green : .secondary)
+                }
+                Button("Настроить расширения Finder…", action: FinderMenu.showSettings)
+            } header: {
+                Text("Контекстное меню")
+            } footer: {
+                Text("Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования.")
+                    .foregroundStyle(.secondary)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                finderMenuEnabled = FinderMenu.isEnabled
             }
 
             Section("Доступ к файлам") {

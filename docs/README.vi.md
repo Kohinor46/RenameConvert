@@ -43,6 +43,10 @@ Các định dạng mà macOS không tự xử lý được (WebP, MP3, MKV, AVI
 **FFmpeg 7.1** tích hợp sẵn (LGPL 2.1, kèm LAME và libwebp). FFmpeg được biên dịch từ mã nguồn chính thức bằng `scripts/build-ffmpeg.sh`,
 có kiểm tra SHA-256, và chỉ phụ thuộc vào các thư viện hệ thống.
 
+**Menu ngữ cảnh Finder:** bấm chuột phải vào một tệp (hoặc nhiều tệp) → **Chuyển đổi sang** → chọn định dạng.
+Tệp được chuyển đổi ngay, như thể bạn đã đổi phần mở rộng. Tiện ích mở rộng Finder được bật ở lần chạy đầu tiên;
+bạn có thể tắt nó trong Cài đặt hệ thống → Cài đặt chung → Mục đăng nhập & tiện ích mở rộng (hoặc trong ứng dụng: Cài đặt → “Cài đặt tiện ích mở rộng Finder…”).
+
 **Quy tắc.** Với mọi cặp "từ → sang" (một phần mở rộng, một danh mục hoặc "bất kỳ"), bạn chọn cách xử lý:
 hỏi trước, chuyển đổi ngay, hoặc không chuyển đổi — và có giữ lại bản gốc hay không.
 Quy tắc cụ thể nhất sẽ được ưu tiên; mặc định video là "Hỏi" và mọi thứ khác là "Chuyển đổi ngay".
@@ -103,6 +107,7 @@ Video quảng bá: `scripts/promo/make-promo.sh` (lồng tiếng bằng `say`, k
 | `AppModel.swift` | Cài đặt, hàng đợi, lời nhắc, lịch sử, thông báo |
 | `AskPanel.swift`, `ParamsForm.swift` | Bảng xác nhận và biểu mẫu tham số |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menu trên thanh menu và cửa sổ cài đặt |
+| `FinderExtension/`, `FinderMenu.swift` | Tiện ích mở rộng Finder (menu con “Chuyển đổi sang”) và xử lý yêu cầu của nó trong ứng dụng |
 
 ## Giấy phép của các thành phần đi kèm
 

@@ -12,7 +12,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SOURCES = ROOT / "Sources" / "RenameConvert"
+SOURCES = [ROOT / "Sources" / "RenameConvert", ROOT / "FinderExtension"]
 LOCALIZATION = ROOT / "Resources" / "Localization"
 CYRILLIC = re.compile(r"[А-Яа-яЁё]")
 SPEC = re.compile(r"%(?:lld|@|%)")
@@ -78,7 +78,7 @@ def to_key(parts):
 
 def extract():
     keys = []
-    for path in sorted(SOURCES.rglob("*.swift")):
+    for path in sorted(p for source in SOURCES for p in source.rglob("*.swift")):
         if path.name == "Languages.swift":   # самоназвания языков не переводятся
             continue
         for parts, line in literals(path.read_text()):

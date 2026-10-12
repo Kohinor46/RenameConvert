@@ -43,6 +43,10 @@ Format yang tidak dapat ditangani macOS sendiri (WebP, MP3, MKV, AVI, WebM, OGG�
 **FFmpeg 7.1** bawaan (LGPL 2.1, dengan LAME dan libwebp). FFmpeg dibangun dari sumber resmi oleh `scripts/build-ffmpeg.sh`,
 dengan pemeriksaan SHA-256, dan hanya bergantung pada pustaka sistem.
 
+**Menu konteks Finder:** klik kanan sebuah file (atau beberapa) → **Konversi ke** → pilih format.
+File langsung dikonversi, seolah Anda mengganti ekstensinya. Ekstensi Finder diaktifkan saat pertama kali dijalankan;
+Anda bisa mematikannya di Pengaturan Sistem → Umum → Item Masuk & Ekstensi (atau dari app: Pengaturan → “Pengaturan Ekstensi Finder…”).
+
 **Aturan.** Untuk setiap pasangan "dari → ke" (ekstensi, kategori, atau "Apa saja") Anda memilih apa yang terjadi:
 tanyakan dulu, langsung konversi, atau jangan konversi — serta apakah file asli disimpan.
 Aturan yang paling spesifik yang berlaku; secara default video diatur ke "Tanyakan" dan lainnya ke "Langsung konversi".
@@ -103,6 +107,7 @@ Video promo: `scripts/promo/make-promo.sh` (sulih suara dengan `say`, bingkai Sw
 | `AppModel.swift` | Pengaturan, antrean, permintaan konfirmasi, riwayat, notifikasi |
 | `AskPanel.swift`, `ParamsForm.swift` | Panel konfirmasi dan formulir parameter |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menu di bar menu dan jendela pengaturan |
+| `FinderExtension/`, `FinderMenu.swift` | Ekstensi Finder (submenu “Konversi ke”) dan penanganan permintaannya di app |
 
 ## Lisensi komponen yang disertakan
 

@@ -43,6 +43,10 @@ Format som macOS inte klarar på egen hand (WebP, MP3, MKV, AVI, WebM, OGG…) k
 **FFmpeg 7.1** (LGPL 2.1, med LAME och libwebp). Den byggs från officiell källkod av `scripts/build-ffmpeg.sh`,
 med SHA-256-kontroller, och är bara beroende av systembibliotek.
 
+**Finders snabbmeny:** högerklicka på en fil (eller flera) → **Konvertera till** → välj ett format.
+Filen konverteras direkt, som om du hade bytt filändelse. Finder-tillägget slås på vid första starten;
+du kan stänga av det i Systeminställningar → Allmänt → Inloggningsobjekt och tillägg (eller i appen: Inställningar → ”Inställningar för Finder-tillägg…”).
+
 **Regler.** För varje par ”från → till” (ett filnamnstillägg, en kategori eller ”alla”) väljer du vad som händer:
 fråga först, konvertera direkt eller konvertera inte – och om originalet ska behållas.
 Den mest specifika regeln vinner; som standard är video inställt på ”Fråga” och allt annat på ”Konvertera direkt”.
@@ -103,6 +107,7 @@ Reklamfilmer: `scripts/promo/make-promo.sh` (speakerröst med `say`, SwiftUI-bil
 | `AppModel.swift` | Inställningar, kö, frågor, historik, notiser |
 | `AskPanel.swift`, `ParamsForm.swift` | Bekräftelsepanel och parameterformulär |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menyradsmeny och inställningsfönster |
+| `FinderExtension/`, `FinderMenu.swift` | Finder-tillägg (undermenyn ”Konvertera till”) och hantering av dess förfrågningar i appen |
 
 ## Licens för medföljande komponenter
 

@@ -174,3 +174,10 @@
 "Поддержать" = "Destek Ol";
 "Не удалось положить оригинал в Корзину, файл не изменён: %@" = "Orijinal Çöp Sepeti’ne taşınamadı, dosya değiştirilmedi: %@";
 "У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "Güncellemenin sağlama toplamı yok — sürümler sayfasından elle indirin.";
+"Конвертировать в" = "Şuna dönüştür";
+"Пункт «Конвертировать в» в меню Finder" = "Finder menüsünde “Şuna dönüştür”";
+"Включён" = "Açık";
+"Выключен" = "Kapalı";
+"Настроить расширения Finder…" = "Finder uzantı ayarları…";
+"Контекстное меню" = "Bağlam menüsü";
+"Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Finder’da bir dosyaya sağ tıklayıp bir biçim seçin — dosya yeniden adlandırmadan hemen dönüştürülür.";

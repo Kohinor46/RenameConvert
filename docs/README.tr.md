@@ -43,6 +43,10 @@ macOS’in kendi başına işleyemediği biçimler (WebP, MP3, MKV, AVI, WebM, O
 **FFmpeg 7.1** (LGPL 2.1, LAME ve libwebp ile) tarafından dönüştürülür. FFmpeg, `scripts/build-ffmpeg.sh` ile resmî kaynaklardan
 SHA-256 denetimleriyle derlenir ve yalnızca sistem kitaplıklarına bağımlıdır.
 
+**Finder bağlam menüsü:** bir dosyaya (veya birkaçına) sağ tıklayın → **Şuna dönüştür** → bir biçim seçin.
+Dosya, uzantısını değiştirmişsiniz gibi hemen dönüştürülür. Finder uzantısı ilk açılışta etkinleşir;
+Sistem Ayarları → Genel → Giriş Öğeleri ve Uzantılar bölümünden (veya uygulamada: Ayarlar → “Finder uzantı ayarları…”) kapatabilirsiniz.
+
 **Kurallar.** Her “kaynak → hedef” çifti için (bir uzantı, bir kategori ya da “herhangi biri”) ne olacağını siz seçersiniz:
 önce sor, hemen dönüştür ya da dönüştürme — ve orijinalin saklanıp saklanmayacağı.
 En özgül kural geçerli olur; varsayılan olarak video için “Sor”, diğer her şey için “Hemen Dönüştür” seçilidir.
@@ -103,6 +107,7 @@ Tanıtım videoları: `scripts/promo/make-promo.sh` (`say` ile seslendirme, Swif
 | `AppModel.swift` | Ayarlar, kuyruk, sorular, geçmiş, bildirimler |
 | `AskPanel.swift`, `ParamsForm.swift` | Onay paneli ve parametre formu |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menü çubuğu menüsü ve ayarlar penceresi |
+| `FinderExtension/`, `FinderMenu.swift` | Finder uzantısı (“Şuna dönüştür” alt menüsü) ve isteklerinin uygulamada işlenmesi |
 
 ## Birlikte gelen bileşenlerin lisansı
 

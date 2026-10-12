@@ -43,6 +43,10 @@ Les formats que macOS ne sait pas gérer seul (WebP, MP3, MKV, AVI, WebM, OGG…
 **FFmpeg 7.1** intégré (LGPL 2.1, avec LAME et libwebp). Il est compilé à partir des sources officielles par `scripts/build-ffmpeg.sh`,
 avec vérification SHA-256, et ne dépend que des bibliothèques système.
 
+**Menu contextuel du Finder :** clic droit sur un fichier (ou plusieurs) → **Convertir en** → choisissez un format.
+Le fichier est converti aussitôt, comme si vous aviez changé son extension. L’extension du Finder est activée au premier lancement ;
+vous pouvez la désactiver dans Réglages Système → Général → Ouverture et extensions (ou dans l’app : Réglages → « Réglages des extensions du Finder… »).
+
 **Règles.** Pour chaque paire « source → cible » (une extension, une catégorie ou « n’importe laquelle »), vous choisissez ce qui se passe :
 demander d’abord, convertir tout de suite ou ne pas convertir — et s’il faut conserver l’original.
 La règle la plus précise l’emporte ; par défaut, la vidéo est sur « Demander » et tout le reste sur « Convertir immédiatement ».
@@ -103,6 +107,7 @@ Vidéos promotionnelles : `scripts/promo/make-promo.sh` (voix off avec `say`, im
 | `AppModel.swift` | Réglages, file d’attente, demandes, historique, notifications |
 | `AskPanel.swift`, `ParamsForm.swift` | Panneau de confirmation et formulaire des paramètres |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menu de la barre des menus et fenêtre des réglages |
+| `FinderExtension/`, `FinderMenu.swift` | Extension du Finder (sous-menu « Convertir en ») et traitement de ses demandes dans l’app |
 
 ## Licence des composants inclus
 

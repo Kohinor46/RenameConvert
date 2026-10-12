@@ -43,6 +43,10 @@ Formaten die macOS zelf niet aankan (WebP, MP3, MKV, AVI, WebM, OGG…) worden g
 **FFmpeg 7.1** (LGPL 2.1, met LAME en libwebp). Deze wordt door `scripts/build-ffmpeg.sh` gebouwd uit de officiële broncode,
 met SHA-256-controles, en is alleen afhankelijk van systeembibliotheken.
 
+**Finder-contextmenu:** klik met de rechtermuisknop op een bestand (of meerdere) → **Converteer naar** → kies een formaat.
+Het bestand wordt meteen geconverteerd, alsof je de extensie had gewijzigd. De Finder-extensie wordt bij de eerste start ingeschakeld;
+je kunt haar uitzetten in Systeeminstellingen → Algemeen → Inlogonderdelen en extensies (of in de app: Instellingen → ‘Finder-extensies instellen…’).
+
 **Regels.** Voor elk paar "van → naar" (een extensie, een categorie of "willekeurig") bepaal je wat er gebeurt:
 eerst vragen, direct converteren of niet converteren — en of het origineel bewaard blijft.
 De meest specifieke regel wint; standaard staat video op "Vraag" en al het andere op "Converteer direct".
@@ -103,6 +107,7 @@ Promovideo's: `scripts/promo/make-promo.sh` (voice-over met `say`, SwiftUI-frame
 | `AppModel.swift` | Instellingen, wachtrij, vragen, geschiedenis, meldingen |
 | `AskPanel.swift`, `ParamsForm.swift` | Bevestigingspaneel en parameterformulier |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menubalkmenu en instellingenvenster |
+| `FinderExtension/`, `FinderMenu.swift` | Finder-extensie (submenu ‘Converteer naar’) en afhandeling van haar verzoeken in de app |
 
 ## Licentie van meegeleverde componenten
 

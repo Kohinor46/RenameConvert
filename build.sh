@@ -11,11 +11,17 @@ VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resource
 REPO=$(/usr/libexec/PlistBuddy -c "Print RCUpdateRepository" Resources/Info.plist)
 
 # Универсальный бинарник (Apple Silicon + Intel): собираем обе архитектуры и склеиваем.
-BINS=()
+BINS=() EXT_BINS=()
 for ARCH in arm64 x86_64; do
   TRIPLE="$ARCH-apple-macosx15.0"
   swift build -c release --triple "$TRIPLE"
   BINS+=("$(swift build -c release --triple "$TRIPLE" --show-bin-path)/RenameConvert")
+  # Расширение Finder (контекстное меню). SwiftPM не собирает .appex — компилируем напрямую;
+  # Formats.swift общий с приложением.
+  swiftc -O -swift-version 5 -target "$TRIPLE" -module-name RenameConvertFinder -application-extension \
+    -parse-as-library -Xlinker -e -Xlinker _NSExtensionMain \
+    FinderExtension/*.swift Sources/RenameConvert/Formats.swift -o ".build/RenameConvertFinder-$ARCH"
+  EXT_BINS+=(".build/RenameConvertFinder-$ARCH")
 done
 BIN=.build/RenameConvert-universal
 lipo -create "${BINS[@]}" -output "$BIN"
@@ -30,6 +36,13 @@ cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp "$BIN" "$APP/Contents/MacOS/RenameConvert"
 cp vendor/ffmpeg/ffmpeg "$APP/Contents/Helpers/ffmpeg"
 
+APPEX="$APP/Contents/PlugIns/RenameConvertFinder.appex"
+mkdir -p "$APPEX/Contents/MacOS" "$APPEX/Contents/Resources"
+lipo -create "${EXT_BINS[@]}" -output "$APPEX/Contents/MacOS/RenameConvertFinder"
+cp FinderExtension/Info.plist "$APPEX/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
+  -c "Set :CFBundleVersion $(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" Resources/Info.plist)" "$APPEX/Contents/Info.plist"
+
 # Переводы. Русский — язык разработки: ключи и есть русские строки (ru.lproj: ключ = значение).
 cp -R Resources/Localization/*.lproj "$APP/Contents/Resources/"
 
@@ -37,6 +50,10 @@ LANGS=$(cd Resources/Localization && ls -d *.lproj | sed 's/\.lproj$//' | tr '\n
 /usr/libexec/PlistBuddy -c "Delete :CFBundleLocalizations" "$APP/Contents/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations array" "$APP/Contents/Info.plist"
 for L in $LANGS; do /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations: string $L" "$APP/Contents/Info.plist"; done
+for L in $LANGS; do
+  mkdir -p "$APPEX/Contents/Resources/$L.lproj"
+  cp "Resources/Localization/$L.lproj/Localizable.strings" "$APPEX/Contents/Resources/$L.lproj/"
+done
 
 # Лицензии компонентов (FFmpeg — LGPL 2.1: исходники и скрипт сборки — scripts/build-ffmpeg.sh).
 cp vendor/ffmpeg/LICENSE-*.txt "$APP/Contents/Resources/Licenses/"
@@ -47,8 +64,9 @@ Contents/Helpers/ffmpeg. Source code and the exact build script:
 https://github.com/$REPO/blob/main/scripts/build-ffmpeg.sh
 EOF
 
-# Сначала подписываем вложенный исполняемый файл, потом приложение.
+# Сначала подписываем вложенное (ffmpeg, расширение — оно обязано быть в песочнице), потом приложение.
 codesign --force --options runtime --sign - "$APP/Contents/Helpers/ffmpeg"
+codesign --force --options runtime --sign - --entitlements FinderExtension/FinderSync.entitlements "$APPEX"
 codesign --force --options runtime --sign - "$APP"
 echo "Собрано: $APP $VERSION ($(lipo -archs "$APP/Contents/MacOS/RenameConvert"), $(du -sh "$APP" | cut -f1))"
 

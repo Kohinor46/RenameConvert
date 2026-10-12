@@ -10,6 +10,8 @@ struct ConversionJob: Identifiable, Sendable {
     let plan: ConversionPlan
     var params: ConversionParams
     var keepOriginal: Bool
+    /// Переименовал файл не пользователь, а мы (меню Finder): при ошибке или отмене вернуть старое имя.
+    var revertRenameOnFailure = false
 
     var newName: String { (path as NSString).lastPathComponent }
     var directory: String { (path as NSString).deletingLastPathComponent }

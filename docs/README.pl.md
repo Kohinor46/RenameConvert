@@ -43,6 +43,10 @@ Formaty, których macOS nie obsługuje samodzielnie (WebP, MP3, MKV, AVI, WebM, 
 **FFmpeg 7.1** (LGPL 2.1, z LAME i libwebp). Jest budowany z oficjalnych źródeł przez `scripts/build-ffmpeg.sh`,
 z weryfikacją SHA-256, i zależy wyłącznie od bibliotek systemowych.
 
+**Menu kontekstowe Findera:** kliknij plik (lub kilka) prawym przyciskiem → **Konwertuj na** → wybierz format.
+Plik zostanie od razu skonwertowany, jakbyś zmienił mu rozszerzenie. Rozszerzenie Findera włącza się przy pierwszym uruchomieniu;
+można je wyłączyć w Ustawieniach systemowych → Ogólne → Rzeczy otwierane podczas logowania i rozszerzenia (lub w aplikacji: Ustawienia → „Ustawienia rozszerzeń Findera…”).
+
 **Reguły.** Dla każdej pary „z → do” (rozszerzenie, kategoria lub „dowolne”) wybierasz, co ma się stać:
 najpierw zapytać, od razu przekonwertować lub nie konwertować — oraz czy zachować oryginał.
 Wygrywa najbardziej szczegółowa reguła; domyślnie dla wideo ustawione jest „Pytaj”, a dla wszystkiego innego „Konwertuj od razu”.
@@ -103,6 +107,7 @@ Filmy promocyjne: `scripts/promo/make-promo.sh` (lektor za pomocą `say`, klatki
 | `AppModel.swift` | Ustawienia, kolejka, zapytania, historia, powiadomienia |
 | `AskPanel.swift`, `ParamsForm.swift` | Panel potwierdzenia i formularz parametrów |
 | `RenameConvertApp.swift`, `SettingsView.swift` | Menu na pasku menu i okno ustawień |
+| `FinderExtension/`, `FinderMenu.swift` | Rozszerzenie Findera (podmenu „Konwertuj na”) i obsługa jego żądań w aplikacji |
 
 ## Licencja dołączonych komponentów
 

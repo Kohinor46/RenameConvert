@@ -42,6 +42,43 @@ import Testing
     }
 }
 
+@Suite struct FinderMenuTests {
+    init() { _ = TestEnv.ready }
+
+    @Test func targetsStartWithOwnCategoryWithoutSynonyms() {
+        let image = Formats.targets(from: "png")
+        #expect(image.first?.contains("jpg") == true)
+        #expect(!image.joined().contains("png") && !image.joined().contains("jpeg") && !image.joined().contains("tif"))
+        #expect(Formats.targets(from: "mov").first?.contains("mp4") == true)
+        #expect(Formats.targets(from: "docx").first?.contains("pdf") == true)
+        #expect(Formats.targets(from: "crdownload").isEmpty)
+        // Каждый предложенный формат действительно конвертируется.
+        for ext in ["heic", "mov", "wav", "pdf", "json", "zip", "gif"] {
+            for to in Formats.targets(from: ext).joined() { #expect(Formats.plan(from: ext, to: to) != nil) }
+        }
+    }
+
+    @Test func parsesLinkFromExtension() throws {
+        let url = try #require(URL(string: "renameconvert://convert?to=JPG&path=/a/b%20c%26d.png&path=/x/y.heic&path=relative.png"))
+        let parsed = try #require(FinderMenu.parse(url))
+        #expect(parsed.to == "jpg")
+        #expect(parsed.paths == ["/a/b c&d.png", "/x/y.heic"])
+        #expect(FinderMenu.parse(URL(string: "renameconvert://convert?to=jpg")!) == nil)
+        #expect(FinderMenu.parse(URL(string: "other://convert?to=jpg&path=/a.png")!) == nil)
+    }
+
+    @Test func destinationDoesNotOverwrite() throws {
+        let dir = try TempDir()
+        let source = try dir.write("photo.png", Data([1]))
+        #expect(FinderMenu.destination(for: source.path, to: "jpg") == dir.file("photo.jpg").path)
+        try dir.write("photo.jpg", Data([2]))
+        try dir.write("photo 2.jpg", Data([3]))
+        #expect(FinderMenu.destination(for: source.path, to: "jpg") == dir.file("photo 3.jpg").path)
+        #expect(FinderMenu.destination(for: dir.file("a.tar.gz").path, to: "zip") == dir.file("a.zip").path)
+        #expect(FinderMenu.destination(for: dir.file("README").path, to: "txt") == nil)
+    }
+}
+
 @Suite struct RulesTests {
     init() { _ = TestEnv.ready }
 

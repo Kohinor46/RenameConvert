@@ -174,3 +174,10 @@
 "Поддержать" = "Unterstützen";
 "Не удалось положить оригинал в Корзину, файл не изменён: %@" = "Das Original konnte nicht in den Papierkorb gelegt werden, die Datei wurde nicht geändert: %@";
 "У обновления нет контрольной суммы — скачайте его вручную со страницы релизов." = "Das Update hat keine Prüfsumme – lade es manuell von der Release-Seite.";
+"Конвертировать в" = "Konvertieren in";
+"Пункт «Конвертировать в» в меню Finder" = "„Konvertieren in“ im Finder-Menü";
+"Включён" = "Ein";
+"Выключен" = "Aus";
+"Настроить расширения Finder…" = "Finder-Erweiterungen einrichten…";
+"Контекстное меню" = "Kontextmenü";
+"Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Klicke im Finder mit der rechten Maustaste auf eine Datei und wähle ein Format – die Datei wird sofort konvertiert, ohne Umbenennen.";

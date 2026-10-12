@@ -96,8 +96,10 @@ case "${1:-}" in
     ;;
   release)
     dist
-    NOTES=${NOTES_FILE:-}
+    # Заметки из NOTES_FILE, иначе — сгенерированные GitHub.
+    NOTES=(--generate-notes)
+    [[ -n ${NOTES_FILE:-} ]] && NOTES=(--notes-file "$NOTES_FILE")
     gh release create "v$VERSION" build/RenameConvert.zip build/RenameConvert.dmg \
-      --repo "$REPO" --title "RenameConvert $VERSION" ${NOTES:+--notes-file "$NOTES"} ${NOTES:---generate-notes}
+      --repo "$REPO" --title "RenameConvert $VERSION" "${NOTES[@]}"
     ;;
 esac

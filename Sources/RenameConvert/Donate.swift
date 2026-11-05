@@ -79,11 +79,13 @@ struct DonateTab: View {
                                 NSPasteboard.general.setString(address, forType: .string)
                                 copied = true
                             }
-                            Label("Отправляйте только USDT в сети TON — иначе средства могут потеряться.",
-                                  systemImage: "exclamationmark.triangle.fill")
-                                .font(.callout)
-                                .foregroundStyle(.orange)
-                                .fixedSize(horizontal: false, vertical: true)
+                            Label {
+                                Text("Отправляйте только USDT в сети TON — иначе средства могут потеряться.")
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            }
+                            .font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     .padding(.vertical, 6)

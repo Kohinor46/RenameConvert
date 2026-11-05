@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Byt namn på en fil i Finder och ändra filändelsen — till exempel **photo.heic → photo.jpg** eller **video.mov → video.mp4**. Bekräfta bytet av filändelse så konverteras filen. Bilder, video, ljud, dokument, JSON/plist och arkiv — se listan på fliken ”Format”.";
 "Доступ к файлам" = "Filåtkomst";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Första gången Skrivbord, Dokument eller Hämtade filer används frågar macOS om tillstånd. Om du nekade kan du aktivera åtkomsten manuellt.";
-"Открыть настройки «Файлы и папки»" = "Öppna inställningarna för ”Filer och mappar”";
+"Открыть настройки «Файлы и папки»…" = "Öppna inställningarna för ”Filer och mappar”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "En regel avgör vad som händer när filändelsen ändras: fråga, konvertera direkt eller inte göra något. Den mest specifika regeln gäller (en filändelse går före en kategori). Om ingen passar gäller ”%@” från fliken ”Allmänt”.";
 "Из" = "Från";
 "В" = "Till";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Inställningar för Finder-tillägg…";
 "Контекстное меню" = "Snabbmeny";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Högerklicka på en fil i Finder och välj ett format – filen konverteras direkt, utan att du behöver byta namn.";
+"Очистить историю?" = "Rensa historiken?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Original kan inte längre återställas från historiken. Filer i papperskorgen finns kvar.";
+"Очистить" = "Rensa";
+"Сбросить правила к стандартным?" = "Återställ standardregler?";
+"Ваши правила будут заменены стандартными." = "Dina regler ersätts med standardreglerna.";
+"Сбросить" = "Återställ";

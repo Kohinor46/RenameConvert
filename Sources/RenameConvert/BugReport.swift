@@ -123,11 +123,13 @@ struct BugReportView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if fallbackUsed {
-                Label("Почта не настроена: открыто письмо без вложения и папка с файлом отчёта — приложите его вручную.",
-                      systemImage: "info.circle")
-                    .font(.callout)
-                    .foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
+                Label {
+                    Text("Почта не настроена: открыто письмо без вложения и папка с файлом отчёта — приложите его вручную.")
+                } icon: {
+                    Image(systemName: "info.circle").foregroundStyle(.tint)
+                }
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             HStack {

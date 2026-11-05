@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Wijzig de naam van een bestand in de Finder en verander de extensie — bijvoorbeeld **photo.heic → photo.jpg** of **video.mov → video.mp4**. Bevestig de wijziging van de extensie en het bestand wordt geconverteerd. Afbeeldingen, video, audio, documenten, JSON/plist en archieven — zie de lijst op het tabblad “Formaten”.";
 "Доступ к файлам" = "Toegang tot bestanden";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "De eerste keer dat het bureaublad, Documenten of Downloads wordt geopend, vraagt macOS om toestemming. Als je dit hebt geweigerd, schakel de toegang dan handmatig in.";
-"Открыть настройки «Файлы и папки»" = "Open instellingen “Bestanden en mappen”";
+"Открыть настройки «Файлы и папки»…" = "Open instellingen “Bestanden en mappen”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Een regel bepaalt wat er gebeurt als de extensie verandert: vragen, direct converteren of niets doen. De meest specifieke regel geldt (een extensie gaat vóór een categorie). Als geen enkele regel past, geldt “%@” van het tabblad “Algemeen”.";
 "Из" = "Van";
 "В" = "Naar";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Finder-extensies instellen…";
 "Контекстное меню" = "Contextmenu";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Klik met de rechtermuisknop op een bestand in de Finder en kies een formaat — het bestand wordt meteen geconverteerd, zonder hernoemen.";
+"Очистить историю?" = "Geschiedenis wissen?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Originelen kunnen dan niet meer via de geschiedenis worden teruggezet. Bestanden in de Prullenmand blijven staan.";
+"Очистить" = "Wis";
+"Сбросить правила к стандартным?" = "Standaardregels herstellen?";
+"Ваши правила будут заменены стандартными." = "Je regels worden vervangen door de standaardregels.";
+"Сбросить" = "Herstel";

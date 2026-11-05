@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Đổi tên tệp trong Finder và thay đổi phần mở rộng — ví dụ: **photo.heic → photo.jpg** hoặc **video.mov → video.mp4**. Xác nhận việc thay đổi phần mở rộng và tệp sẽ được chuyển mã. Hỗ trợ hình ảnh, video, âm thanh, tài liệu, JSON/plist và kho lưu trữ — xem danh sách ở tab “Định dạng”.";
 "Доступ к файлам" = "Truy cập tệp";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Lần đầu truy cập Màn hình nền, Tài liệu hoặc Tải về, macOS sẽ hỏi quyền. Nếu bạn đã từ chối, hãy bật quyền truy cập theo cách thủ công.";
-"Открыть настройки «Файлы и папки»" = "Mở cài đặt “Tệp & thư mục”";
+"Открыть настройки «Файлы и папки»…" = "Mở cài đặt “Tệp & thư mục”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Quy tắc quyết định việc cần làm khi phần mở rộng thay đổi: hỏi, chuyển đổi ngay hoặc không làm gì. Quy tắc cụ thể nhất sẽ được áp dụng (phần mở rộng được ưu tiên hơn danh mục). Nếu không có quy tắc nào phù hợp, tùy chọn “%@” trong tab “Cài đặt chung” sẽ được áp dụng.";
 "Из" = "Từ";
 "В" = "Sang";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Cài đặt tiện ích mở rộng Finder…";
 "Контекстное меню" = "Menu ngữ cảnh";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Bấm chuột phải vào tệp trong Finder và chọn định dạng — tệp được chuyển đổi ngay, không cần đổi tên.";
+"Очистить историю?" = "Xóa lịch sử?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Bạn sẽ không thể khôi phục bản gốc từ lịch sử. Các tệp trong Thùng rác vẫn được giữ lại.";
+"Очистить" = "Xóa";
+"Сбросить правила к стандартным?" = "Đặt lại quy tắc về mặc định?";
+"Ваши правила будут заменены стандартными." = "Các quy tắc của bạn sẽ được thay bằng quy tắc mặc định.";
+"Сбросить" = "Đặt lại";

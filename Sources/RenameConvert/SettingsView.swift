@@ -60,6 +60,9 @@ struct SettingsView: View {
         }
         // Фиксированный размер: иначе таблицы и списки растягивают окно по своей «идеальной» высоте.
         .frame(width: 880, height: 580)
+        // Как в Системных настройках: в заголовке — название раздела, кнопки «свернуть»/«развернуть» затемнены.
+        .navigationTitle(model.settingsTab.title)
+        .background(SettingsWindowStyle())
     }
 
     @ViewBuilder private var detail: some View {
@@ -75,6 +78,25 @@ struct SettingsView: View {
         case .about: AboutTab(model: model)
         case .donate: DonateTab()
         }
+    }
+}
+
+/// Затемняет кнопки «свернуть» и «развернуть»: окно настроек открывается по ⌘, и подстраивается под раздел,
+/// держать его в Dock или растягивать незачем.
+private struct SettingsWindowStyle: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { configure(view.window) }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        DispatchQueue.main.async { configure(view.window) }
+    }
+
+    private func configure(_ window: NSWindow?) {
+        window?.standardWindowButton(.miniaturizeButton)?.isEnabled = false
+        window?.standardWindowButton(.zoomButton)?.isEnabled = false
     }
 }
 
@@ -132,8 +154,11 @@ private struct GeneralTab: View {
 
             Section {
                 LabeledContent("Пункт «Конвертировать в» в меню Finder") {
-                    Text(finderMenuEnabled ? "Включён" : "Выключен")
-                        .foregroundStyle(finderMenuEnabled ? .green : .secondary)
+                    HStack(spacing: 5) {
+                        Image(systemName: finderMenuEnabled ? "checkmark.circle.fill" : "xmark.circle")
+                            .foregroundStyle(finderMenuEnabled ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
+                        Text(finderMenuEnabled ? "Включён" : "Выключен")
+                    }
                 }
                 Button("Настроить расширения Finder…", action: FinderMenu.showSettings)
             } header: {
@@ -149,15 +174,16 @@ private struct GeneralTab: View {
             Section("Доступ к файлам") {
                 Text("При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную.")
                     .fixedSize(horizontal: false, vertical: true)
-                Button("Открыть настройки «Файлы и папки»") {
+                Button("Открыть настройки «Файлы и папки»…") {
                     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders")!)
                 }
             }
 
             if let error = model.lastError {
                 Section {
-                    Label(error, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                    Label { Text(error) } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    }
                     Button("Сообщить об ошибке…") { model.openReport(draft: error) }
                 }
             }
@@ -171,6 +197,7 @@ private struct GeneralTab: View {
 private struct RulesTab: View {
     @Bindable var model: AppModel
     @State private var selection: Rule.ID?
+    @State private var confirmReset = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -179,19 +206,20 @@ private struct RulesTab: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Table($model.rules, selection: $selection) {
-                TableColumn("Из") { $rule in SelectorPicker(selection: $rule.from) }
+                // Подписи у меню скрыты визуально (колонка уже подписана), но остаются для VoiceOver.
+                TableColumn("Из") { $rule in SelectorPicker("Из", selection: $rule.from) }
                     .width(105)
-                TableColumn("В") { $rule in SelectorPicker(selection: $rule.to) }
+                TableColumn("В") { $rule in SelectorPicker("В", selection: $rule.to) }
                     .width(105)
                 TableColumn("Действие") { $rule in
-                    Picker("", selection: $rule.action) {
+                    Picker("Действие", selection: $rule.action) {
                         ForEach(RuleAction.allCases) { Text($0.title).tag($0) }
                     }
                     .labelsHidden()
                 }
                 .width(195)
                 TableColumn("Оригинал") { $rule in
-                    Picker("", selection: $rule.keepOriginal) {
+                    Picker("Оригинал", selection: $rule.keepOriginal) {
                         ForEach(KeepOriginal.allCases) { Text($0.title).tag($0) }
                     }
                     .labelsHidden()
@@ -212,10 +240,17 @@ private struct RulesTab: View {
                 Button("Удалить", systemImage: "minus") { deleteSelected() }
                     .disabled(selection == nil)
                 Spacer()
-                Button("Сбросить к стандартным") { model.rules = Rule.defaults }
+                Button("Сбросить к стандартным") { confirmReset = true }
             }
         }
         .padding(20)
+        // Пользователь сам выбрал сброс, поэтому кнопка без «разрушительного» стиля (HIG › Alerts).
+        .alert("Сбросить правила к стандартным?", isPresented: $confirmReset) {
+            Button("Сбросить") { model.rules = Rule.defaults }
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Ваши правила будут заменены стандартными.")
+        }
     }
 
     private func deleteSelected() {
@@ -226,10 +261,16 @@ private struct RulesTab: View {
 
 /// Выбор «любой / категория / расширение».
 private struct SelectorPicker: View {
+    let label: LocalizedStringKey
     @Binding var selection: RuleSelector
 
+    init(_ label: LocalizedStringKey, selection: Binding<RuleSelector>) {
+        self.label = label
+        _selection = selection
+    }
+
     var body: some View {
-        Picker("", selection: $selection) {
+        Picker(label, selection: $selection) {
             Text("Любой").tag(RuleSelector.any)
             Section("Категории") {
                 ForEach(FileCategory.allCases) { Label($0.title, systemImage: $0.symbol).tag(RuleSelector.category($0)) }
@@ -373,6 +414,7 @@ private struct FormatsTab: View {
 
 private struct HistoryTab: View {
     @Bindable var model: AppModel
+    @State private var confirmClear = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -391,10 +433,16 @@ private struct HistoryTab: View {
                 Text("Записей: \(model.history.count)")
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Очистить историю") { model.clearHistory() }
+                Button("Очистить историю") { confirmClear = true }
                     .disabled(model.history.isEmpty)
             }
             .padding(12)
+        }
+        .alert("Очистить историю?", isPresented: $confirmClear) {
+            Button("Очистить") { model.clearHistory() }
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся.")
         }
     }
 }
@@ -530,8 +578,9 @@ private struct UpdateStatus: View {
         case .available(let release):
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Label("Доступна версия \(release.version)", systemImage: "arrow.down.circle.fill")
-                        .foregroundStyle(.tint)
+                    Label { Text("Доступна версия \(release.version)").fontWeight(.semibold) } icon: {
+                        Image(systemName: "arrow.down.circle.fill").foregroundStyle(.tint)
+                    }
                     Spacer()
                     Link("Что нового", destination: release.pageURL)
                     Button("Установить и перезапустить") { Task { await updater.install(release) } }
@@ -556,9 +605,13 @@ private struct UpdateStatus: View {
     @ViewBuilder private var statusText: some View {
         switch updater.state {
         case .upToDate:
-            Label("У вас последняя версия", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+            Label { Text("У вас последняя версия") } icon: {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+            }
         case .failed(let message):
-            Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            Label { Text(message) } icon: {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            }
         default:
             if let last = updater.lastCheck {
                 Text("Последняя проверка: \(last, format: .relative(presentation: .named))").foregroundStyle(.secondary)

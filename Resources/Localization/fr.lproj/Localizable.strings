@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Renommez un fichier dans le Finder en changeant son extension, par exemple **photo.heic → photo.jpg** ou **video.mov → video.mp4**. Confirmez le changement d’extension et le fichier sera converti. Images, vidéo, audio, documents, JSON/plist et archives : la liste complète se trouve dans l’onglet « Formats ».";
 "Доступ к файлам" = "Accès aux fichiers";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Lors du premier accès au Bureau, aux Documents ou aux Téléchargements, macOS demandera une autorisation. Si vous l’avez refusée, activez l’accès manuellement.";
-"Открыть настройки «Файлы и папки»" = "Ouvrir les réglages « Fichiers et dossiers »";
+"Открыть настройки «Файлы и папки»…" = "Ouvrir les réglages « Fichiers et dossiers »…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Une règle détermine ce qui se passe lors d’un changement d’extension : demander, convertir immédiatement ou ne rien faire. La règle la plus précise s’applique (l’extension prime sur la catégorie). Si aucune ne correspond, c’est « %@ » de l’onglet « Général » qui s’applique.";
 "Из" = "De";
 "В" = "Vers";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Réglages des extensions du Finder…";
 "Контекстное меню" = "Menu contextuel";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Faites un clic droit sur un fichier dans le Finder et choisissez un format : il est converti aussitôt, sans le renommer.";
+"Очистить историю?" = "Effacer l’historique ?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Il ne sera plus possible de restaurer les originaux depuis l’historique. Les fichiers dans la Corbeille seront conservés.";
+"Очистить" = "Effacer";
+"Сбросить правила к стандартным?" = "Rétablir les règles par défaut ?";
+"Ваши правила будут заменены стандартными." = "Vos règles seront remplacées par les règles par défaut.";
+"Сбросить" = "Rétablir";

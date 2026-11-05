@@ -16,6 +16,9 @@ final class AskPanelController {
         guard let model else { return }
         let panel = self.panel ?? makePanel(model: model)
         self.panel = panel
+        if let ask = model.pendingAsks.first {
+            panel.title = String(localized: "Конвертировать в \(ask.job.plan.to.uppercased())?")
+        }
         if let screen = NSScreen.main, !panel.isVisible {
             let area = screen.visibleFrame
             panel.setFrameTopLeftPoint(NSPoint(x: area.maxX - panel.frame.width - 16, y: area.maxY - 8))

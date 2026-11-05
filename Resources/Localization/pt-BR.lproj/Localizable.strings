@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Renomeie um arquivo no Finder alterando sua extensão — por exemplo, **photo.heic → photo.jpg** ou **video.mov → video.mp4**. Confirme a alteração da extensão e o arquivo será convertido. Imagens, vídeo, áudio, documentos, JSON/plist e arquivos compactados — veja a lista na aba “Formatos”.";
 "Доступ к файлам" = "Acesso a Arquivos";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "No primeiro acesso à Mesa, a Documentos ou a Downloads, o macOS pedirá permissão. Se você negou, ative o acesso manualmente.";
-"Открыть настройки «Файлы и папки»" = "Abrir Ajustes de “Arquivos e Pastas”";
+"Открыть настройки «Файлы и папки»…" = "Abrir Ajustes de “Arquivos e Pastas”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Uma regra define o que fazer ao alterar a extensão: perguntar, converter imediatamente ou não fazer nada. Vale a regra mais específica (a extensão tem prioridade sobre a categoria). Se nenhuma corresponder, vale “%@” da aba “Geral”.";
 "Из" = "De";
 "В" = "Para";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Ajustes das extensões do Finder…";
 "Контекстное меню" = "Menu de contexto";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Clique com o botão direito em um arquivo no Finder e escolha um formato — ele é convertido na hora, sem renomear.";
+"Очистить историю?" = "Limpar o histórico?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Não será possível restaurar os originais pelo histórico. Os arquivos no Lixo serão mantidos.";
+"Очистить" = "Limpar";
+"Сбросить правила к стандартным?" = "Restaurar as regras padrão?";
+"Ваши правила будут заменены стандартными." = "Suas regras serão substituídas pelas regras padrão.";
+"Сбросить" = "Restaurar";

@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Přejmenujte soubor ve Finderu a změňte příponu — například **photo.heic → photo.jpg** nebo **video.mov → video.mp4**. Potvrďte změnu přípony a soubor bude překódován. Obrázky, video, zvuk, dokumenty, JSON/plist a archivy — seznam najdete na kartě „Formáty“.";
 "Доступ к файлам" = "Přístup k souborům";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Při prvním přístupu k Ploše, Dokumentům nebo Staženým souborům požádá macOS o svolení. Pokud jste ho zamítli, povolte přístup ručně.";
-"Открыть настройки «Файлы и папки»" = "Otevřít nastavení „Soubory a složky“";
+"Открыть настройки «Файлы и папки»…" = "Otevřít nastavení „Soubory a složky“…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Pravidlo určuje, co dělat při změně přípony: zeptat se, převést ihned, nebo nic nedělat. Uplatní se nejkonkrétnější pravidlo (přípona má přednost před kategorií). Pokud žádné nevyhovuje, platí „%@“ z karty „Obecné“.";
 "Из" = "Z";
 "В" = "Na";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Nastavení rozšíření Finderu…";
 "Контекстное меню" = "Kontextová nabídka";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Klikněte na soubor ve Finderu pravým tlačítkem a vyberte formát — soubor se hned převede, bez přejmenování.";
+"Очистить историю?" = "Vymazat historii?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Originály už nepůjde obnovit z historie. Soubory v koši zůstanou.";
+"Очистить" = "Vymazat";
+"Сбросить правила к стандартным?" = "Obnovit výchozí pravidla?";
+"Ваши правила будут заменены стандартными." = "Vaše pravidla budou nahrazena výchozími.";
+"Сбросить" = "Obnovit";

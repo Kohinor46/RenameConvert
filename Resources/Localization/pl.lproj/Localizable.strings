@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Zmień nazwę pliku w Finderze, zmieniając rozszerzenie — na przykład **photo.heic → photo.jpg** lub **video.mov → video.mp4**. Potwierdź zmianę rozszerzenia, a plik zostanie przekodowany. Obrazy, wideo, audio, dokumenty, JSON/plist i archiwa — lista na karcie „Formaty”.";
 "Доступ к файлам" = "Dostęp do plików";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Przy pierwszym dostępie do Biurka, Dokumentów lub Pobranych rzeczy macOS poprosi o pozwolenie. Jeśli odmówiono, włącz dostęp ręcznie.";
-"Открыть настройки «Файлы и папки»" = "Otwórz ustawienia „Pliki i foldery”";
+"Открыть настройки «Файлы и папки»…" = "Otwórz ustawienia „Pliki i foldery”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Reguła określa, co zrobić przy zmianie rozszerzenia: zapytać, od razu skonwertować lub nic nie robić. Stosowana jest najbardziej szczegółowa reguła (rozszerzenie ma pierwszeństwo przed kategorią). Jeśli żadna nie pasuje, obowiązuje „%@” z karty „Ogólne”.";
 "Из" = "Z";
 "В" = "Do";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Ustawienia rozszerzeń Findera…";
 "Контекстное меню" = "Menu kontekstowe";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Kliknij plik prawym przyciskiem w Finderze i wybierz format — plik zostanie od razu skonwertowany, bez zmiany nazwy.";
+"Очистить историю?" = "Wyczyścić historię?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Nie będzie można przywrócić oryginałów z historii. Pliki w Koszu pozostaną.";
+"Очистить" = "Wyczyść";
+"Сбросить правила к стандартным?" = "Przywrócić reguły domyślne?";
+"Ваши правила будут заменены стандартными." = "Twoje reguły zostaną zastąpione domyślnymi.";
+"Сбросить" = "Przywróć";

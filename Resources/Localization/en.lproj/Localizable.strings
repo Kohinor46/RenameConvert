@@ -8,7 +8,7 @@
 "Не удалось вернуть %@: %@" = "Couldn’t restore %@: %@";
 "Сообщить об ошибке" = "Report a Bug";
 "Конвертировать в %@?" = "Convert to %@?";
-"Оригинал в Корзину" = "Move Original to Trash";
+"Оригинал в Корзину" = "Move original to Trash";
 "Запомнить для .%@ → .%@" = "Remember for .%@ → .%@";
 "Ещё в очереди: %lld" = "%lld more in queue";
 "Не конвертировать" = "Don’t Convert";
@@ -41,17 +41,17 @@
 "Качество JPEG, HEIC, AVIF, WebP" = "JPEG, HEIC, AVIF, WebP quality";
 "Кодек" = "Codec";
 "Разрешение" = "Resolution";
-"Частота кадров" = "Frame Rate";
+"Частота кадров" = "Frame rate";
 "Исходная" = "Original";
 "%lld кадр/с" = "%lld fps";
 "Удалять геопозицию и личные метаданные" = "Remove location and personal metadata";
 "GIF из видео" = "GIF from Video";
 "Ширина" = "Width";
 "Аудио (AAC, MP3)" = "Audio (AAC, MP3)";
-"Битрейт" = "Bit Rate";
+"Битрейт" = "Bit rate";
 "%lld кбит/с" = "%lld kbps";
 "Документы → PDF" = "Documents → PDF";
-"Размер страницы" = "Page Size";
+"Размер страницы" = "Page size";
 "На паузе" = "Paused";
 "Следит за переименованиями" = "Watching for renames";
 "Пауза" = "Pause";
@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Rename a file in Finder and change its extension — for example, **photo.heic → photo.jpg** or **video.mov → video.mp4**. Confirm the extension change and the file will be converted. Images, video, audio, documents, JSON/plist and archives — see the full list on the “Formats” tab.";
 "Доступ к файлам" = "File Access";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "The first time Desktop, Documents or Downloads is accessed, macOS will ask for permission. If you denied it, turn on access manually.";
-"Открыть настройки «Файлы и папки»" = "Open “Files and Folders” Settings";
+"Открыть настройки «Файлы и папки»…" = "Open “Files and Folders” Settings…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "A rule decides what happens when an extension changes: ask, convert immediately or do nothing. The most specific rule applies (an extension takes priority over a category). If none matches, “%@” from the “General” tab applies.";
 "Из" = "From";
 "В" = "To";
@@ -155,7 +155,7 @@
 "Показать журнал" = "Show Log";
 "Показать журнал в Finder" = "Show Log in Finder";
 "Язык" = "Language";
-"Язык интерфейса" = "App Language";
+"Язык интерфейса" = "App language";
 "Как в системе" = "System Default";
 "Язык изменится после перезапуска." = "The language will change after relaunch.";
 "Перезапустить" = "Relaunch";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Finder Extension Settings…";
 "Контекстное меню" = "Context Menu";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Right-click a file in Finder and choose a format — the file is converted right away, no renaming needed.";
+"Очистить историю?" = "Clear History?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "You won’t be able to restore originals from History. Files in the Trash will remain.";
+"Очистить" = "Clear";
+"Сбросить правила к стандартным?" = "Restore Default Rules?";
+"Ваши правила будут заменены стандартными." = "Your rules will be replaced with the defaults.";
+"Сбросить" = "Restore";

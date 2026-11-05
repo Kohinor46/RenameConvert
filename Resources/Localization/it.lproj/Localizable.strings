@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Rinomina un file nel Finder cambiandone l’estensione, ad esempio **photo.heic → photo.jpg** o **video.mov → video.mp4**. Conferma il cambio di estensione e il file verrà convertito. Immagini, video, audio, documenti, JSON/plist e archivi: l’elenco completo è nel pannello “Formati”.";
 "Доступ к файлам" = "Accesso ai file";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Al primo accesso a Scrivania, Documenti o Download, macOS chiederà l’autorizzazione. Se l’hai negata, abilita l’accesso manualmente.";
-"Открыть настройки «Файлы и папки»" = "Apri le impostazioni “File e cartelle”";
+"Открыть настройки «Файлы и папки»…" = "Apri le impostazioni “File e cartelle”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Una regola stabilisce cosa fare quando cambia l’estensione: chiedere, convertire subito o non fare nulla. Si applica la regola più specifica (l’estensione prevale sulla categoria). Se nessuna corrisponde, si applica “%@” dal pannello “Generali”.";
 "Из" = "Da";
 "В" = "A";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Impostazioni estensioni del Finder…";
 "Контекстное меню" = "Menu contestuale";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Fai clic destro su un file nel Finder e scegli un formato: il file viene convertito subito, senza rinominarlo.";
+"Очистить историю?" = "Cancellare la cronologia?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "Non sarà più possibile ripristinare gli originali dalla cronologia. I file nel Cestino rimarranno.";
+"Очистить" = "Cancella";
+"Сбросить правила к стандартным?" = "Ripristinare le regole predefinite?";
+"Ваши правила будут заменены стандартными." = "Le tue regole verranno sostituite con quelle predefinite.";
+"Сбросить" = "Ripristina";

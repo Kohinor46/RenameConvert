@@ -95,7 +95,7 @@
 "Переименуйте файл в Finder и поменяйте расширение — например, **photo.heic → photo.jpg** или **video.mov → video.mp4**. Подтвердите смену расширения, и файл будет перекодирован. Картинки, видео, аудио, документы, JSON/plist и архивы — список на вкладке «Форматы»." = "Ganti nama file di Finder dan ubah ekstensinya — misalnya, **photo.heic → photo.jpg** atau **video.mov → video.mp4**. Konfirmasikan perubahan ekstensi, dan file akan dienkode ulang. Gambar, video, audio, dokumen, JSON/plist, dan arsip — daftarnya ada di tab “Format”.";
 "Доступ к файлам" = "Akses File";
 "При первом обращении к Рабочему столу, Документам или Загрузкам macOS спросит разрешение. Если вы отказали, включите доступ вручную." = "Saat pertama kali mengakses Desktop, Dokumen, atau Unduhan, macOS akan meminta izin. Jika Anda menolak, aktifkan akses secara manual.";
-"Открыть настройки «Файлы и папки»" = "Buka Pengaturan “File dan Folder”";
+"Открыть настройки «Файлы и папки»…" = "Buka Pengaturan “File dan Folder”…";
 "Правило решает, что делать при смене расширения: спросить, конвертировать сразу или ничего не делать. Срабатывает самое конкретное правило (расширение важнее категории). Если ни одно не подошло — действует «%@» из вкладки «Основные»." = "Aturan menentukan apa yang dilakukan saat ekstensi diubah: bertanya, langsung mengonversi, atau tidak melakukan apa pun. Aturan yang paling spesifik akan berlaku (ekstensi lebih diutamakan daripada kategori). Jika tidak ada yang cocok, “%@” dari tab “Umum” yang berlaku.";
 "Из" = "Dari";
 "В" = "Ke";
@@ -181,3 +181,9 @@
 "Настроить расширения Finder…" = "Pengaturan Ekstensi Finder…";
 "Контекстное меню" = "Menu Konteks";
 "Щёлкните файл правой кнопкой мыши в Finder и выберите формат — файл сконвертируется сразу, без переименования." = "Klik kanan file di Finder dan pilih format — file langsung dikonversi tanpa perlu mengganti nama.";
+"Очистить историю?" = "Hapus riwayat?";
+"Вернуть оригиналы через историю будет нельзя. Файлы в Корзине останутся." = "File asli tidak akan bisa dipulihkan dari riwayat. File di Tempat Sampah tetap ada.";
+"Очистить" = "Hapus";
+"Сбросить правила к стандартным?" = "Kembalikan aturan ke default?";
+"Ваши правила будут заменены стандартными." = "Aturan Anda akan diganti dengan aturan default.";
+"Сбросить" = "Kembalikan";
